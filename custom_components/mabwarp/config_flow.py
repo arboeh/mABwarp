@@ -17,7 +17,7 @@ from .const import (
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_TOPIC_PREFIX, default=DEFAULT_TOPIC_PREFIX): str,
-        vol.Required(CONF_DEVICE_ID): str,
+        vol.Optional(CONF_DEVICE_ID, default=""): str,
         vol.Optional(CONF_WARP_VERSION, default="WARP3"): vol.In(WARP_VERSIONS),
     }
 )
@@ -37,19 +37,17 @@ class MabwarpConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: igno
                 return self.async_abort(reason="mqtt_not_available")
 
             if not user_input.get(CONF_DEVICE_ID):
-                errors["base"] = "invalid_device_id"
-            else:
-                existing = [
-                    e
-                    for e in self._async_current_entries()
-                    if e.data.get(CONF_DEVICE_ID) == user_input[CONF_DEVICE_ID]
-                ]
-                if existing:
-                    return self.async_abort(reason="already_configured")
-                return self.async_create_entry(
-                    title=f"WARP Charger ({user_input[CONF_DEVICE_ID]})",
-                    data=user_input,
-                )
+                user_input[CONF_DEVICE_ID] = user_input[CONF_TOPIC_PREFIX]
+
+            existing = [
+                e for e in self._async_current_entries() if e.data.get(CONF_DEVICE_ID) == user_input[CONF_DEVICE_ID]
+            ]
+            if existing:
+                return self.async_abort(reason="already_configured")
+            return self.async_create_entry(
+                title=f"WARP Charger ({user_input[CONF_DEVICE_ID]})",
+                data=user_input,
+            )
 
         return self.async_show_form(
             step_id="user",

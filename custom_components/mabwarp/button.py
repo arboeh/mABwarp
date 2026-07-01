@@ -29,18 +29,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up mABwarp buttons."""
     topic_prefix = entry.data[CONF_TOPIC_PREFIX]
-    device_id = entry.data[CONF_DEVICE_ID]
 
     start_button = MabwarpButtonBase(
         entry,
         "Start Charging",
-        TOPIC_EVSE_START.format(prefix=topic_prefix, id=device_id),
+        TOPIC_EVSE_START.format(prefix=topic_prefix),
         "mdi:play-circle",
     )
     stop_button = MabwarpButtonBase(
         entry,
         "Stop Charging",
-        TOPIC_EVSE_STOP.format(prefix=topic_prefix, id=device_id),
+        TOPIC_EVSE_STOP.format(prefix=topic_prefix),
         "mdi:stop-circle",
     )
     async_add_entities([start_button, stop_button])

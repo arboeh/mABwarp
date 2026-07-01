@@ -46,9 +46,8 @@ class MabwarpUserEnabledSwitch(SwitchEntity):
         self._attr_is_on = False
 
         prefix = config_entry.data[CONF_TOPIC_PREFIX]
-        device_id = config_entry.data[CONF_DEVICE_ID]
-        self._subscribe_topic = TOPIC_EVSE_USER_ENABLED.format(prefix=prefix, id=device_id)
-        self._set_topic = TOPIC_EVSE_SET_USER_ENABLED.format(prefix=prefix, id=device_id)
+        self._subscribe_topic = TOPIC_EVSE_USER_ENABLED.format(prefix=prefix)
+        self._set_topic = TOPIC_EVSE_SET_USER_ENABLED.format(prefix=prefix)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
@@ -62,13 +61,9 @@ class MabwarpUserEnabledSwitch(SwitchEntity):
                 self._attr_is_on = data["enabled"]
                 self.async_write_ha_state()
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
-                _LOGGER.warning(
-                    "Failed to parse MQTT message on %s: %s", self._subscribe_topic, err
-                )
+                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._subscribe_topic, err)
 
-        self._unsubscribe = await self.hass.components.mqtt.async_subscribe(
-            self._subscribe_topic, message_received, 0
-        )
+        self._unsubscribe = await self.hass.components.mqtt.async_subscribe(self._subscribe_topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""

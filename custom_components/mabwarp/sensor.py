@@ -38,7 +38,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up mABwarp sensors."""
     topic_prefix = entry.data[CONF_TOPIC_PREFIX]
-    device_id = entry.data[CONF_DEVICE_ID]
 
     entities = []
 
@@ -47,7 +46,7 @@ async def async_setup_entry(
         [
             MabwarpMqttSensor(
                 entry,
-                TOPIC_EVSE_STATE.format(prefix=topic_prefix, id=device_id),
+                TOPIC_EVSE_STATE.format(prefix=topic_prefix),
                 "IEC61851 State",
                 "iec61851_state",
                 None,
@@ -56,7 +55,7 @@ async def async_setup_entry(
             ),
             MabwarpMqttSensor(
                 entry,
-                TOPIC_EVSE_STATE.format(prefix=topic_prefix, id=device_id),
+                TOPIC_EVSE_STATE.format(prefix=topic_prefix),
                 "Charger State",
                 "charger_state",
                 None,
@@ -65,7 +64,7 @@ async def async_setup_entry(
             ),
             MabwarpMqttSensor(
                 entry,
-                TOPIC_EVSE_STATE.format(prefix=topic_prefix, id=device_id),
+                TOPIC_EVSE_STATE.format(prefix=topic_prefix),
                 "Allowed Charging Current",
                 "allowed_charging_current",
                 "mA",
@@ -74,7 +73,7 @@ async def async_setup_entry(
             ),
             MabwarpMqttSensor(
                 entry,
-                TOPIC_EVSE_STATE.format(prefix=topic_prefix, id=device_id),
+                TOPIC_EVSE_STATE.format(prefix=topic_prefix),
                 "Error State",
                 "error_state",
                 None,
@@ -89,7 +88,7 @@ async def async_setup_entry(
         [
             MabwarpMqttSensor(
                 entry,
-                TOPIC_EVSE_LOW_LEVEL.format(prefix=topic_prefix, id=device_id),
+                TOPIC_EVSE_LOW_LEVEL.format(prefix=topic_prefix),
                 "CP PWM Duty Cycle",
                 "cp_pwm_duty_cycle",
                 "%",
@@ -98,7 +97,7 @@ async def async_setup_entry(
             ),
             MabwarpMqttSensor(
                 entry,
-                TOPIC_EVSE_LOW_LEVEL.format(prefix=topic_prefix, id=device_id),
+                TOPIC_EVSE_LOW_LEVEL.format(prefix=topic_prefix),
                 "Uptime",
                 "uptime",
                 "s",
@@ -111,77 +110,108 @@ async def async_setup_entry(
     # Meter values sensors
     entities.extend(
         [
+            # Voltage
             MabwarpMqttSensor(
                 entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix, id=device_id),
-                "Power",
-                "power",
+                TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                "Voltage L1",
+                "0",
+                "V",
+                SensorDeviceClass.VOLTAGE,
+                None,
+            ),
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                "Voltage L2",
+                "1",
+                "V",
+                SensorDeviceClass.VOLTAGE,
+                None,
+            ),
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                "Voltage L3",
+                "2",
+                "V",
+                SensorDeviceClass.VOLTAGE,
+                None,
+            ),
+            # Current
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                "Current L1",
+                "3",
+                "A",
+                SensorDeviceClass.CURRENT,
+                None,
+            ),
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                "Current L2",
+                "4",
+                "A",
+                SensorDeviceClass.CURRENT,
+                None,
+            ),
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                "Current L3",
+                "5",
+                "A",
+                SensorDeviceClass.CURRENT,
+                None,
+            ),
+            # Power
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                "Power L1",
+                "6",
                 "W",
                 SensorDeviceClass.POWER,
                 None,
             ),
             MabwarpMqttSensor(
                 entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix, id=device_id),
+                TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                "Power L2",
+                "7",
+                "W",
+                SensorDeviceClass.POWER,
+                None,
+            ),
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                "Power L3",
+                "8",
+                "W",
+                SensorDeviceClass.POWER,
+                None,
+            ),
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                "Power",
+                "19",
+                "W",
+                SensorDeviceClass.POWER,
+                None,
+            ),
+            # Energy
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_METER_VALUES.format(prefix=topic_prefix),
                 "Energy (total)",
-                "energy_abs",
+                "26",
                 "kWh",
                 SensorDeviceClass.ENERGY,
                 SensorStateClass.TOTAL_INCREASING,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix, id=device_id),
-                "Current L1",
-                "current_per_phase.0",
-                "A",
-                None,
-                None,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix, id=device_id),
-                "Current L2",
-                "current_per_phase.1",
-                "A",
-                None,
-                None,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix, id=device_id),
-                "Current L3",
-                "current_per_phase.2",
-                "A",
-                None,
-                None,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix, id=device_id),
-                "Voltage L1",
-                "voltage_per_phase.0",
-                "V",
-                SensorDeviceClass.VOLTAGE,
-                None,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix, id=device_id),
-                "Voltage L2",
-                "voltage_per_phase.1",
-                "V",
-                SensorDeviceClass.VOLTAGE,
-                None,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix, id=device_id),
-                "Voltage L3",
-                "voltage_per_phase.2",
-                "V",
-                SensorDeviceClass.VOLTAGE,
-                None,
             ),
         ]
     )
@@ -191,7 +221,7 @@ async def async_setup_entry(
         [
             MabwarpMqttSensor(
                 entry,
-                TOPIC_NFC_LAST_TAG.format(prefix=topic_prefix, id=device_id),
+                TOPIC_NFC_LAST_TAG.format(prefix=topic_prefix),
                 "NFC Last Tag",
                 "tag_id",
                 None,
@@ -200,7 +230,7 @@ async def async_setup_entry(
             ),
             MabwarpMqttSensor(
                 entry,
-                TOPIC_NFC_LAST_TAG.format(prefix=topic_prefix, id=device_id),
+                TOPIC_NFC_LAST_TAG.format(prefix=topic_prefix),
                 "NFC Last Seen",
                 "last_seen",
                 None,
@@ -215,7 +245,7 @@ async def async_setup_entry(
         [
             MabwarpMqttSensor(
                 entry,
-                TOPIC_CHARGE_MANAGER.format(prefix=topic_prefix, id=device_id),
+                TOPIC_CHARGE_MANAGER.format(prefix=topic_prefix),
                 "Charge Manager State",
                 "state",
                 None,
@@ -224,7 +254,7 @@ async def async_setup_entry(
             ),
             MabwarpMqttSensor(
                 entry,
-                TOPIC_CHARGE_MANAGER.format(prefix=topic_prefix, id=device_id),
+                TOPIC_CHARGE_MANAGER.format(prefix=topic_prefix),
                 "Allocated Current",
                 "allocated_current",
                 "mA",
@@ -276,9 +306,7 @@ class MabwarpMqttSensor(SensorEntity):
             except (json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError) as err:
                 _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
 
-        self._unsubscribe = await self.hass.components.mqtt.async_subscribe(
-            self._topic, message_received, 0
-        )
+        self._unsubscribe = await self.hass.components.mqtt.async_subscribe(self._topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""
@@ -287,7 +315,11 @@ class MabwarpMqttSensor(SensorEntity):
             self._unsubscribe = None
 
     def _extract_field(self, data: dict) -> Any:
-        """Extract nested field value using dot notation."""
+        """Extract nested field value using dot notation or array index."""
+        # data is a list (float array) for meter values
+        if isinstance(data, list):
+            return data[int(self._field_path)]
+        # fallback for dict (evse/state etc.)
         keys = self._field_path.split(".")
         value: Any = data
         for key in keys:

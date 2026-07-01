@@ -26,7 +26,7 @@ def test_sensor_unique_id():
     )()
     sensor = MabwarpMqttSensor(
         mock_config_entry,
-        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX, id="TEST01"),
+        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
         "Test",
         "test_field",
         None,
@@ -53,7 +53,7 @@ def test_sensor_device_info():
     )()
     sensor = MabwarpMqttSensor(
         mock_config_entry,
-        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX, id="TEST01"),
+        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
         "Test",
         "test_field",
         None,
@@ -81,7 +81,7 @@ def test_extract_field_simple():
     )()
     sensor = MabwarpMqttSensor(
         mock_config_entry,
-        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX, id="TEST01"),
+        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
         "Test",
         "power",
         None,
@@ -107,7 +107,7 @@ def test_extract_field_nested_list():
     )()
     sensor = MabwarpMqttSensor(
         mock_config_entry,
-        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX, id="TEST01"),
+        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
         "Test",
         "current_per_phase.0",
         None,
@@ -133,7 +133,7 @@ def test_sensor_name():
     )()
     sensor = MabwarpMqttSensor(
         mock_config_entry,
-        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX, id="TEST01"),
+        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
         "Test Sensor",
         "test_field",
         None,

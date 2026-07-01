@@ -10,14 +10,13 @@
           "warp_version": "WARP Charger Version"
         },
         "data_description": {
-          "topic_prefix": "The MQTT topic prefix configured in your WARP Charger (default: warp)",
-          "device_id": "The unique device ID shown in the WARP web interface (e.g. ABC123)",
+          "topic_prefix": "The MQTT-Topic-Prefix from the WARP web interface (e.g. warp3)",
+          "device_id": "Optional display name in Home Assistant. If left empty, the topic prefix will be used.",
           "warp_version": "Select your WARP Charger hardware generation"
         }
       }
     },
     "error": {
-      "invalid_device_id": "Device ID must not be empty.",
       "mqtt_not_configured": "MQTT integration is not configured in Home Assistant."
     },
     "abort": {

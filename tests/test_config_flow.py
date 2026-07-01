@@ -37,26 +37,23 @@ def test_form_shows_correctly():
     hass = _make_mock_hass()
     flow = MabwarpConfigFlow()
     flow.hass = hass
-    result = asyncio.get_event_loop().run_until_complete(
-        flow.async_step_user(None)
-    )
+    result = asyncio.get_event_loop().run_until_complete(flow.async_step_user(None))
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
 
-def test_empty_device_id_shows_error():
-    """Test that empty device_id shows an error."""
-    hass = _make_mock_hass()
+def test_empty_device_id_uses_topic_prefix():
+    """Test that empty device_id uses topic_prefix as fallback."""
+    hass = _make_mock_hass(has_mqtt=True)
     flow = MabwarpConfigFlow()
     flow.hass = hass
     result = asyncio.get_event_loop().run_until_complete(
-        flow.async_step_user(
-            {"topic_prefix": "warp", "device_id": "", "warp_version": "WARP3"}
-        )
+        flow.async_step_user({"topic_prefix": "warp3", "device_id": "", "warp_version": "WARP3"})
     )
-    assert result["type"] == FlowResultType.FORM
-    assert "base" in result["errors"]
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "WARP Charger (warp3)"
+    assert result["data"][CONF_DEVICE_ID] == "warp3"
 
 
 def test_successful_entry_creation():
@@ -65,9 +62,7 @@ def test_successful_entry_creation():
     flow = MabwarpConfigFlow()
     flow.hass = hass
     result = asyncio.get_event_loop().run_until_complete(
-        flow.async_step_user(
-            {"topic_prefix": "warp", "device_id": "TEST01", "warp_version": "WARP3"}
-        )
+        flow.async_step_user({"topic_prefix": "warp", "device_id": "TEST01", "warp_version": "WARP3"})
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "WARP Charger (TEST01)"
@@ -80,9 +75,7 @@ def test_mqtt_not_available_aborts():
     flow = MabwarpConfigFlow()
     flow.hass = hass
     result = asyncio.get_event_loop().run_until_complete(
-        flow.async_step_user(
-            {"topic_prefix": "warp", "device_id": "TEST01", "warp_version": "WARP3"}
-        )
+        flow.async_step_user({"topic_prefix": "warp", "device_id": "TEST01", "warp_version": "WARP3"})
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "mqtt_not_available"
@@ -99,9 +92,7 @@ def test_duplicate_device_id_aborts():
     flow = MabwarpConfigFlow()
     flow.hass = hass
     result = asyncio.get_event_loop().run_until_complete(
-        flow.async_step_user(
-            {"topic_prefix": "warp", "device_id": "TEST01", "warp_version": "WARP3"}
-        )
+        flow.async_step_user({"topic_prefix": "warp", "device_id": "TEST01", "warp_version": "WARP3"})
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"

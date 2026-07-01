@@ -27,7 +27,7 @@ def test_start_button_unique_id():
     button = MabwarpButtonBase(
         mock_config_entry,
         "Start Charging",
-        TOPIC_EVSE_START.format(prefix=DEFAULT_TOPIC_PREFIX, id="TEST01"),
+        TOPIC_EVSE_START.format(prefix=DEFAULT_TOPIC_PREFIX),
         "mdi:play-circle",
     )
     assert "start_charging" in button.unique_id
@@ -49,7 +49,7 @@ def test_stop_button_unique_id():
     button = MabwarpButtonBase(
         mock_config_entry,
         "Stop Charging",
-        TOPIC_EVSE_STOP.format(prefix=DEFAULT_TOPIC_PREFIX, id="TEST01"),
+        TOPIC_EVSE_STOP.format(prefix=DEFAULT_TOPIC_PREFIX),
         "mdi:stop-circle",
     )
     assert "stop_charging" in button.unique_id
@@ -71,13 +71,13 @@ def test_button_icons():
     start_button = MabwarpButtonBase(
         mock_config_entry,
         "Start Charging",
-        TOPIC_EVSE_START.format(prefix=DEFAULT_TOPIC_PREFIX, id="TEST01"),
+        TOPIC_EVSE_START.format(prefix=DEFAULT_TOPIC_PREFIX),
         "mdi:play-circle",
     )
     stop_button = MabwarpButtonBase(
         mock_config_entry,
         "Stop Charging",
-        TOPIC_EVSE_STOP.format(prefix=DEFAULT_TOPIC_PREFIX, id="TEST01"),
+        TOPIC_EVSE_STOP.format(prefix=DEFAULT_TOPIC_PREFIX),
         "mdi:stop-circle",
     )
     assert start_button._attr_icon == "mdi:play-circle"

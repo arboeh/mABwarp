@@ -24,4 +24,3 @@ def mock_config_entry() -> MockConfigEntry:
         },
         title="WARP Charger (TEST01)",
     )
-

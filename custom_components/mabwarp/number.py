@@ -64,11 +64,8 @@ class MabwarpChargingCurrentNumber(NumberEntity):
                 _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
 
         topic_prefix = self._config_entry.data[CONF_TOPIC_PREFIX]
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        self._topic = TOPIC_EVSE_EXT_CURRENT.format(prefix=topic_prefix, id=device_id)
-        self._unsubscribe = await self.hass.components.mqtt.async_subscribe(
-            self._topic, message_received, 0
-        )
+        self._topic = TOPIC_EVSE_EXT_CURRENT.format(prefix=topic_prefix)
+        self._unsubscribe = await self.hass.components.mqtt.async_subscribe(self._topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""
@@ -79,8 +76,7 @@ class MabwarpChargingCurrentNumber(NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         topic_prefix = self._config_entry.data[CONF_TOPIC_PREFIX]
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        topic = TOPIC_EVSE_SET_EXT_CURRENT.format(prefix=topic_prefix, id=device_id)
+        topic = TOPIC_EVSE_SET_EXT_CURRENT.format(prefix=topic_prefix)
         payload = json.dumps({"current": int(value)})
         await self.hass.components.mqtt.async_publish(
             self.hass,
