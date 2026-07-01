@@ -1,0 +1,12 @@
+{
+  "domain": "mabwarp",
+  "name": "mABwarp – WARP Charger via MQTT",
+  "version": "0.1.0",
+  "documentation": "https://github.com/DEIN_USER/mABwarp",
+  "issue_tracker": "https://github.com/DEIN_USER/mABwarp/issues",
+  "dependencies": ["mqtt"],
+  "codeowners": ["@DEIN_USER"],
+  "config_flow": true,
+  "iot_class": "local_push",
+  "requirements": []
+}

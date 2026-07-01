@@ -1,0 +1,60 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "mABwarp – WARP Charger via MQTT",
+        "description": "Verbinde deinen Tinkerforge WARP Charger mit Home Assistant über MQTT. Gib den MQTT-Topic-Prefix und die Geräte-ID aus deinem WARP-Webinterface ein.",
+        "data": {
+          "topic_prefix": "MQTT-Topic-Prefix",
+          "device_id": "Geräte-ID",
+          "warp_version": "WARP Charger Version"
+        },
+        "data_description": {
+          "topic_prefix": "Der MQTT-Topic-Prefix aus der WARP-Konfiguration (Standard: warp)",
+          "device_id": "Die eindeutige Geräte-ID aus dem WARP-Webinterface (z. B. ABC123)",
+          "warp_version": "Wähle die Hardware-Generation deines WARP Chargers"
+        }
+      }
+    },
+    "error": {
+      "invalid_device_id": "Die Geräte-ID darf nicht leer sein.",
+      "mqtt_not_configured": "Die MQTT-Integration ist in Home Assistant nicht konfiguriert."
+    },
+    "abort": {
+      "already_configured": "Dieser WARP Charger ist bereits konfiguriert.",
+      "mqtt_not_available": "Die MQTT-Integration ist nicht verfügbar."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iec61851_state": { "name": "IEC61851-Status" },
+      "charger_state": { "name": "Ladestatus" },
+      "allowed_charging_current": { "name": "Erlaubter Ladestrom" },
+      "error_state": { "name": "Fehlerstatus" },
+      "cp_pwm_duty_cycle": { "name": "CP-PWM-Tastverhältnis" },
+      "uptime": { "name": "Betriebszeit" },
+      "power": { "name": "Leistung" },
+      "energy_total": { "name": "Energie (gesamt)" },
+      "current_l1": { "name": "Strom L1" },
+      "current_l2": { "name": "Strom L2" },
+      "current_l3": { "name": "Strom L3" },
+      "voltage_l1": { "name": "Spannung L1" },
+      "voltage_l2": { "name": "Spannung L2" },
+      "voltage_l3": { "name": "Spannung L3" },
+      "nfc_last_tag": { "name": "Letzter NFC-Tag" },
+      "nfc_last_seen": { "name": "NFC zuletzt gesehen" },
+      "charge_manager_state": { "name": "Lastmanagement-Status" },
+      "allocated_current": { "name": "Zugewiesener Strom" }
+    },
+    "number": {
+      "charging_current_limit": { "name": "Ladestrom-Begrenzung" }
+    },
+    "switch": {
+      "user_enabled": { "name": "Wallbox aktiv" }
+    },
+    "button": {
+      "start_charging": { "name": "Ladevorgang starten" },
+      "stop_charging": { "name": "Ladevorgang beenden" }
+    }
+  }
+}

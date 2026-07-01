@@ -1,0 +1,81 @@
+# pyproject.toml
+
+[build-system]
+requires = ["setuptools>=65.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mabwarp"
+version = "0.1.0"
+description = "Bridges Tinkerforge WARP Charger MQTT topics to Home Assistant – the Auto Discovery it deserves"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["homeassistant>=2024.3.3"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pytest-socket",
+    "pytest-homeassistant-custom-component>=0.13.100",
+    "aioresponses",
+    "freezegun",
+    "ruff",
+    "tzdata",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["custom_components/*"]
+exclude = ["images*", "tests*", "notes*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+timeout = 30
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+    "ignore::UserWarning:pytest_homeassistant_custom_component",
+    "ignore::pytest.PytestConfigWarning",
+]
+addopts = ["-v", "--strict-markers", "--tb=short"]
+log_cli = true
+log_cli_level = "WARNING"
+log_cli_format = "%(levelname)-8s %(message)s"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+extend-select = ["RUF100"]
+ignore = ["F821"]
+select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"custom_components/**/*.py" = ["E4", "E7", "E9", "F"]
+"tests/**/*.py" = ["E4", "E7", "E9", "F", "W"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = ["import-error"]
+
+[tool.mypy]
+mypy_path = ["tests/stubs"]
+
+[[tool.mypy.overrides]]
+module = "pytest_homeassistant_custom_component.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "homeassistant.*"
+ignore_missing_imports = true

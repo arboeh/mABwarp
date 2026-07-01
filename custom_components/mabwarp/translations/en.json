@@ -1,0 +1,60 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "mABwarp – WARP Charger via MQTT",
+        "description": "Connect your Tinkerforge WARP Charger to Home Assistant via MQTT. Enter the MQTT topic prefix and the Device ID shown in your WARP web interface.",
+        "data": {
+          "topic_prefix": "MQTT Topic Prefix",
+          "device_id": "Device ID",
+          "warp_version": "WARP Charger Version"
+        },
+        "data_description": {
+          "topic_prefix": "The MQTT topic prefix configured in your WARP Charger (default: warp)",
+          "device_id": "The unique device ID shown in the WARP web interface (e.g. ABC123)",
+          "warp_version": "Select your WARP Charger hardware generation"
+        }
+      }
+    },
+    "error": {
+      "invalid_device_id": "Device ID must not be empty.",
+      "mqtt_not_configured": "MQTT integration is not configured in Home Assistant."
+    },
+    "abort": {
+      "already_configured": "This WARP Charger is already configured.",
+      "mqtt_not_available": "MQTT integration is not available."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "iec61851_state": { "name": "IEC61851 State" },
+      "charger_state": { "name": "Charger State" },
+      "allowed_charging_current": { "name": "Allowed Charging Current" },
+      "error_state": { "name": "Error State" },
+      "cp_pwm_duty_cycle": { "name": "CP PWM Duty Cycle" },
+      "uptime": { "name": "Uptime" },
+      "power": { "name": "Power" },
+      "energy_total": { "name": "Energy (total)" },
+      "current_l1": { "name": "Current L1" },
+      "current_l2": { "name": "Current L2" },
+      "current_l3": { "name": "Current L3" },
+      "voltage_l1": { "name": "Voltage L1" },
+      "voltage_l2": { "name": "Voltage L2" },
+      "voltage_l3": { "name": "Voltage L3" },
+      "nfc_last_tag": { "name": "NFC Last Tag" },
+      "nfc_last_seen": { "name": "NFC Last Seen" },
+      "charge_manager_state": { "name": "Charge Manager State" },
+      "allocated_current": { "name": "Allocated Current" }
+    },
+    "number": {
+      "charging_current_limit": { "name": "Charging Current Limit" }
+    },
+    "switch": {
+      "user_enabled": { "name": "Wallbox Enabled" }
+    },
+    "button": {
+      "start_charging": { "name": "Start Charging" },
+      "stop_charging": { "name": "Stop Charging" }
+    }
+  }
+}
