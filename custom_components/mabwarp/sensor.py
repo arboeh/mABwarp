@@ -6,6 +6,7 @@ import json
 import logging
 from typing import Any
 
+from homeassistant.components import mqtt
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -306,7 +307,7 @@ class MabwarpMqttSensor(SensorEntity):
             except (json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError) as err:
                 _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
 
-        self._unsubscribe = await self.hass.components.mqtt.async_subscribe(self._topic, message_received, 0)
+        self._unsubscribe = await mqtt.async_subscribe(self.hass, self._topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""

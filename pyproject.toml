@@ -1,12 +1,12 @@
 # pyproject.toml
 
 [build-system]
-requires = ["setuptools>=65.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "mabwarp"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Bridges Tinkerforge WARP Charger MQTT topics to Home Assistant – the Auto Discovery it deserves"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -25,10 +25,12 @@ dev = [
     "tzdata",
 ]
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["custom_components/*"]
-exclude = ["images*", "tests*", "notes*"]
+[tool.hatch.build.targets.wheel]
+packages = ["custom_components"]
+
+[tool.hatch.version]
+source = "code"
+path = "custom_components/mabwarp/get_version.py"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

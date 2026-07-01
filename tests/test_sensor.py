@@ -92,8 +92,8 @@ def test_extract_field_simple():
     assert result == 1500.0
 
 
-def test_extract_field_nested_list():
-    """Test nested list field extraction."""
+def test_extract_field_meter_array():
+    """Test meter array field extraction by index."""
     mock_config_entry = type(
         "MockEntry",
         (),
@@ -107,15 +107,44 @@ def test_extract_field_nested_list():
     )()
     sensor = MabwarpMqttSensor(
         mock_config_entry,
-        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
-        "Test",
-        "current_per_phase.0",
-        None,
+        "warp/meters/1/values",
+        "Voltage L1",
+        "0",
+        "V",
         None,
         None,
     )
-    result = sensor._extract_field({"current_per_phase": [16.0, 0.0, 0.0]})
-    assert result == 16.0
+    # Simulate meter values array: [V1, V2, V3, A1, A2, A3, W1, W2, W3, ..., W_total, ..., Energy]
+    meter_data = [
+        230.0,
+        231.0,
+        232.0,
+        16.0,
+        0.0,
+        0.0,
+        3600.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        3600.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1234.5,
+    ]
+    result = sensor._extract_field(meter_data)
+    assert result == 230.0  # Index 0 = Voltage L1
 
 
 def test_sensor_name():

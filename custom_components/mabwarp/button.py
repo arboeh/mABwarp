@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+from homeassistant.components import mqtt
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -58,7 +59,7 @@ class MabwarpButtonBase(ButtonEntity):
     async def async_press(self) -> None:
         """Handle button press."""
         _LOGGER.info("Button pressed: %s", self._topic)
-        await self.hass.components.mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._topic,
             None,

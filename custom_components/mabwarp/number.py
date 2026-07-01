@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 
+from homeassistant.components import mqtt
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -65,7 +66,7 @@ class MabwarpChargingCurrentNumber(NumberEntity):
 
         topic_prefix = self._config_entry.data[CONF_TOPIC_PREFIX]
         self._topic = TOPIC_EVSE_EXT_CURRENT.format(prefix=topic_prefix)
-        self._unsubscribe = await self.hass.components.mqtt.async_subscribe(self._topic, message_received, 0)
+        self._unsubscribe = await mqtt.async_subscribe(self.hass, self._topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""
@@ -78,7 +79,7 @@ class MabwarpChargingCurrentNumber(NumberEntity):
         topic_prefix = self._config_entry.data[CONF_TOPIC_PREFIX]
         topic = TOPIC_EVSE_SET_EXT_CURRENT.format(prefix=topic_prefix)
         payload = json.dumps({"current": int(value)})
-        await self.hass.components.mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             topic,
             payload,

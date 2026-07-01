@@ -2,10 +2,16 @@
 
 from __future__ import annotations
 
+import json
+import pathlib
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
+
+MANIFEST = json.loads((pathlib.Path(__file__).parent / "manifest.json").read_text(encoding="utf-8"))
+__version__ = MANIFEST["version"]
 
 PLATFORMS = ["sensor", "switch", "number", "button"]
 

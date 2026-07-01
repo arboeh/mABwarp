@@ -115,9 +115,12 @@ ruff format custom_components/mabwarp/
 
 
 ## Release Process
-1. Update `version` in `custom_components/mabwarp/manifest.json`
-2. Create GitHub Release with tag `vX.Y.Z`
+1. Update `version` in `custom_components/mabwarp/manifest.json` – this is the single source of truth
+2. Create GitHub Release with tag `vX.Y.Z` matching the version
 3. HACS picks up the new release automatically
+
+> ℹ️ `pyproject.toml` reads the version dynamically from `manifest.json` via hatchling.
+> Never edit the version in `pyproject.toml` directly.
 
 
 ---
