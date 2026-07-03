@@ -38,9 +38,9 @@ class MabwarpChargingCurrentNumber(NumberEntity):
 
     _attr_name = "Charging Current Limit"
     _attr_native_min_value = 0
-    _attr_native_max_value = 32000
-    _attr_native_step = 1000
-    _attr_native_unit_of_measurement = "mA"
+    _attr_native_max_value = 32
+    _attr_native_step = 1
+    _attr_native_unit_of_measurement = "A"
     _attr_icon = "mdi:current-ac"
     _attr_mode = NumberMode.SLIDER
 
@@ -78,7 +78,7 @@ class MabwarpChargingCurrentNumber(NumberEntity):
         """Set new value."""
         topic_prefix = self._config_entry.data[CONF_TOPIC_PREFIX]
         topic = TOPIC_EVSE_SET_EXT_CURRENT.format(prefix=topic_prefix)
-        payload = json.dumps({"current": int(value)})
+        payload = json.dumps({"current": int(value * 1000)})
         await mqtt.async_publish(
             self.hass,
             topic,
