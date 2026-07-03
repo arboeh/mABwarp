@@ -50,13 +50,18 @@ class MeterValueCoordinator:
     def __init__(self, hass: HomeAssistant):
         self.hass = hass
         self._value_ids_mapping: dict[str, int] = {}
+        self._values_data: dict[str, Any] = {}
         self._unsubscribe_value_ids = None
+        self._unsubscribe_values = None
 
     def update_value_ids_mapping(self, value_ids: list) -> None:
         self._value_ids_mapping = {str(vid): idx for idx, vid in enumerate(value_ids)}
 
     def get_index(self, meter_value_id: str) -> int | None:
         return self._value_ids_mapping.get(meter_value_id)
+
+    def store_values(self, values: list) -> None:
+        self._values_data = {str(vid): val for vid, val in enumerate(values) if str(vid) in self._value_ids_mapping}
 
 
 async def async_setup_entry(
@@ -80,10 +85,28 @@ async def async_setup_entry(
         except (json.JSONDecodeError, TypeError, ValueError) as err:
             _LOGGER.warning("Failed to parse value_ids message: %s", err)
 
+    async def values_message_received(msg) -> None:
+        try:
+            payload = msg.payload
+            if isinstance(payload, bytes):
+                payload = payload.decode("utf-8")
+            data = json.loads(payload)
+            if isinstance(data, list):
+                coordinator.store_values(data)
+                _check_plausibility(coordinator)
+        except (json.JSONDecodeError, TypeError, ValueError) as err:
+            _LOGGER.warning("Failed to parse values message: %s", err)
+
     coordinator._unsubscribe_value_ids = await mqtt.async_subscribe(
         hass,
         TOPIC_METER_VALUE_IDS.format(prefix=topic_prefix),
         value_ids_message_received,
+        0,
+    )
+    coordinator._unsubscribe_values = await mqtt.async_subscribe(
+        hass,
+        TOPIC_METER_VALUES.format(prefix=topic_prefix),
+        values_message_received,
         0,
     )
 
@@ -325,8 +348,8 @@ async def async_setup_entry(
                 TOPIC_CHARGE_MANAGER.format(prefix=topic_prefix),
                 "Allocated Current",
                 "allocated_current",
-                "mA",
-                None,
+                "A",
+                SensorDeviceClass.CURRENT,
                 None,
                 coordinator,
             ),
@@ -334,6 +357,50 @@ async def async_setup_entry(
     )
 
     async_add_entities(entities)
+
+
+def _check_plausibility(coordinator: MeterValueCoordinator) -> None:
+    """Log warnings for implausible meter value combinations."""
+    data = coordinator._values_data
+
+    voltage_ids = [
+        METER_VALUE_ID_VOLTAGE_L1,
+        METER_VALUE_ID_VOLTAGE_L2,
+        METER_VALUE_ID_VOLTAGE_L3,
+    ]
+    current_ids = [
+        METER_VALUE_ID_CURRENT_L1,
+        METER_VALUE_ID_CURRENT_L2,
+        METER_VALUE_ID_CURRENT_L3,
+    ]
+    power_ids = [
+        METER_VALUE_ID_POWER_L1,
+        METER_VALUE_ID_POWER_L2,
+        METER_VALUE_ID_POWER_L3,
+    ]
+
+    for vid_v, vid_i, vid_p in zip(voltage_ids, current_ids, power_ids):
+        voltage = data.get(vid_v)
+        current = data.get(vid_i)
+        power = data.get(vid_p)
+
+        phase = voltage_ids.index(vid_v) + 1
+
+        if voltage == 0 and current is not None and current > 1:
+            _LOGGER.warning(
+                "Implausible Messwertkombination: Phase %d, U=0V aber I=%.1fA",
+                phase,
+                current,
+            )
+
+        if power is not None and current is not None:
+            if abs(power) < 1 and current > 5:
+                _LOGGER.warning(
+                    "Implausible Messwertkombination: Phase %d, P=%.1fW aber I=%.1fA",
+                    phase,
+                    power,
+                    current,
+                )
 
 
 class MabwarpMqttSensor(SensorEntity):
