@@ -6,11 +6,11 @@ import json
 import logging
 from typing import Any
 
-from homeassistant.components import mqtt
+from homeassistant.components.mqtt import async_publish, async_subscribe
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -64,7 +64,7 @@ class MabwarpUserEnabledSwitch(SwitchEntity):
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
                 _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._subscribe_topic, err)
 
-        self._unsubscribe = await mqtt.async_subscribe(self.hass, self._subscribe_topic, message_received, 0)
+        self._unsubscribe = await async_subscribe(self.hass, self._subscribe_topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""
@@ -75,7 +75,7 @@ class MabwarpUserEnabledSwitch(SwitchEntity):
     async def _async_publish_enabled(self, enabled: bool) -> None:
         """Publish enabled state to MQTT."""
         payload = json.dumps({"enabled": enabled})
-        await mqtt.async_publish(
+        await async_publish(
             self.hass,
             self._set_topic,
             payload,

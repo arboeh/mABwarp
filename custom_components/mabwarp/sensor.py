@@ -6,7 +6,7 @@ import json
 import logging
 from typing import Any
 
-from homeassistant.components import mqtt
+from homeassistant.components.mqtt.client import async_subscribe
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -36,8 +36,8 @@ from .const import (
     TOPIC_CHARGE_MANAGER,
     TOPIC_EVSE_LOW_LEVEL,
     TOPIC_EVSE_STATE,
-    TOPIC_METER_VALUES,
     TOPIC_METER_VALUE_IDS,
+    TOPIC_METER_VALUES,
     TOPIC_NFC_LAST_TAG,
 )
 
@@ -97,13 +97,13 @@ async def async_setup_entry(
         except (json.JSONDecodeError, TypeError, ValueError) as err:
             _LOGGER.warning("Failed to parse values message: %s", err)
 
-    coordinator._unsubscribe_value_ids = await mqtt.async_subscribe(
+    coordinator._unsubscribe_value_ids = await async_subscribe(
         hass,
         TOPIC_METER_VALUE_IDS.format(prefix=topic_prefix),
         value_ids_message_received,
         0,
     )
-    coordinator._unsubscribe_values = await mqtt.async_subscribe(
+    coordinator._unsubscribe_values = await async_subscribe(
         hass,
         TOPIC_METER_VALUES.format(prefix=topic_prefix),
         values_message_received,
@@ -144,6 +144,7 @@ async def async_setup_entry(
                 SensorDeviceClass.CURRENT,
                 None,
                 coordinator,
+                "mA",
             ),
             MabwarpMqttSensor(
                 entry,
@@ -379,7 +380,7 @@ def _check_plausibility(coordinator: MeterValueCoordinator) -> None:
         METER_VALUE_ID_POWER_L3,
     ]
 
-    for vid_v, vid_i, vid_p in zip(voltage_ids, current_ids, power_ids):
+    for vid_v, vid_i, vid_p in zip(voltage_ids, current_ids, power_ids, strict=True):
         voltage = data.get(vid_v)
         current = data.get(vid_i)
         power = data.get(vid_p)
@@ -416,12 +417,14 @@ class MabwarpMqttSensor(SensorEntity):
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,
         coordinator: MeterValueCoordinator | None = None,
+        conversion_factor: float | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._config_entry = config_entry
         self._topic = topic
         self._field_path = field_path
         self._coordinator = coordinator
+        self._conversion_factor = conversion_factor
         self._unsubscribe = None
 
         self._attr_name = f"WARP {name}"
@@ -441,10 +444,16 @@ class MabwarpMqttSensor(SensorEntity):
                 value = self._extract_field(data)
                 self._attr_native_value = value
                 self.async_write_ha_state()
-            except (json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError) as err:
+            except (
+                json.JSONDecodeError,
+                KeyError,
+                IndexError,
+                TypeError,
+                ValueError,
+            ) as err:
                 _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
 
-        self._unsubscribe = await mqtt.async_subscribe(self.hass, self._topic, message_received, 0)
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""
