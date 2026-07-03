@@ -42,8 +42,9 @@ def test_number_limits():
     )()
     number = MabwarpChargingCurrentNumber(mock_config_entry)
     assert number._attr_native_min_value == 0
-    assert number._attr_native_max_value == 32000
-    assert number._attr_native_step == 1000
+    assert number._attr_native_max_value == 32
+    assert number._attr_native_step == 1
+    assert number._attr_native_unit_of_measurement == "A"
 
 
 def test_number_initial_value():

@@ -6,9 +6,19 @@ from custom_components.mabwarp.const import (
     CONF_WARP_VERSION,
     DEFAULT_TOPIC_PREFIX,
     DOMAIN,
+    METER_VALUE_ID_VOLTAGE_L1,
     TOPIC_EVSE_STATE,
+    TOPIC_METER_VALUES,
 )
 from custom_components.mabwarp.sensor import MabwarpMqttSensor
+
+
+class FakeCoordinator:
+    def __init__(self, mapping):
+        self._mapping = mapping
+
+    def get_index(self, meter_value_id):
+        return self._mapping.get(meter_value_id)
 
 
 def test_sensor_unique_id():
@@ -29,6 +39,7 @@ def test_sensor_unique_id():
         TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
         "Test",
         "test_field",
+        None,
         None,
         None,
         None,
@@ -56,6 +67,7 @@ def test_sensor_device_info():
         TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
         "Test",
         "test_field",
+        None,
         None,
         None,
         None,
@@ -87,13 +99,14 @@ def test_extract_field_simple():
         None,
         None,
         None,
+        None,
     )
     result = sensor._extract_field({"power": 1500.0})
     assert result == 1500.0
 
 
-def test_extract_field_meter_array():
-    """Test meter array field extraction by index."""
+def test_extract_field_meter_array_with_mapping():
+    """Test meter array extraction using value_ids mapping."""
     mock_config_entry = type(
         "MockEntry",
         (),
@@ -105,46 +118,80 @@ def test_extract_field_meter_array():
             }
         },
     )()
+    mapping = {METER_VALUE_ID_VOLTAGE_L1: 5, "16": 2}
+    coordinator = FakeCoordinator(mapping)
     sensor = MabwarpMqttSensor(
         mock_config_entry,
-        "warp/meters/1/values",
+        TOPIC_METER_VALUES.format(prefix=DEFAULT_TOPIC_PREFIX),
         "Voltage L1",
-        "0",
+        METER_VALUE_ID_VOLTAGE_L1,
         "V",
         None,
         None,
+        coordinator,
     )
-    # Simulate meter values array: [V1, V2, V3, A1, A2, A3, W1, W2, W3, ..., W_total, ..., Energy]
-    meter_data = [
-        230.0,
-        231.0,
-        232.0,
-        16.0,
-        0.0,
-        0.0,
-        3600.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        3600.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        1234.5,
-    ]
+    meter_data = [10.0, 11.0, 12.0, 13.0, 14.0, 230.0]
     result = sensor._extract_field(meter_data)
-    assert result == 230.0  # Index 0 = Voltage L1
+    assert result == 230.0
+
+
+def test_extract_field_meter_array_when_mapping_missing():
+    """Test meter array returns unknown when value_ids not received."""
+    mock_config_entry = type(
+        "MockEntry",
+        (),
+        {
+            "data": {
+                CONF_DEVICE_ID: "TEST01",
+                CONF_WARP_VERSION: "WARP3",
+                CONF_TOPIC_PREFIX: DEFAULT_TOPIC_PREFIX,
+            }
+        },
+    )()
+    coordinator = FakeCoordinator({})
+    sensor = MabwarpMqttSensor(
+        mock_config_entry,
+        TOPIC_METER_VALUES.format(prefix=DEFAULT_TOPIC_PREFIX),
+        "Voltage L1",
+        METER_VALUE_ID_VOLTAGE_L1,
+        "V",
+        None,
+        None,
+        coordinator,
+    )
+    meter_data = [10.0, 11.0, 12.0]
+    result = sensor._extract_field(meter_data)
+    assert result == "unknown"
+
+
+def test_extract_field_meter_array_changed_order():
+    """Test meter array extraction when value_ids order changes."""
+    mock_config_entry = type(
+        "MockEntry",
+        (),
+        {
+            "data": {
+                CONF_DEVICE_ID: "TEST01",
+                CONF_WARP_VERSION: "WARP3",
+                CONF_TOPIC_PREFIX: DEFAULT_TOPIC_PREFIX,
+            }
+        },
+    )()
+    mapping = {METER_VALUE_ID_VOLTAGE_L1: 7, "16": 3, "19": 1}
+    coordinator = FakeCoordinator(mapping)
+    sensor = MabwarpMqttSensor(
+        mock_config_entry,
+        TOPIC_METER_VALUES.format(prefix=DEFAULT_TOPIC_PREFIX),
+        "Voltage L1",
+        METER_VALUE_ID_VOLTAGE_L1,
+        "V",
+        None,
+        None,
+        coordinator,
+    )
+    meter_data = [100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 230.0]
+    result = sensor._extract_field(meter_data)
+    assert result == 230.0
 
 
 def test_sensor_name():
@@ -165,6 +212,7 @@ def test_sensor_name():
         TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
         "Test Sensor",
         "test_field",
+        None,
         None,
         None,
         None,
