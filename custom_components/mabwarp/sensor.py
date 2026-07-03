@@ -169,7 +169,7 @@ async def async_setup_entry(
                 entry,
                 TOPIC_METER_VALUES.format(prefix=topic_prefix),
                 "Voltage L1",
-                "0",
+                METER_VALUE_ID_VOLTAGE_L1,
                 "V",
                 SensorDeviceClass.VOLTAGE,
                 None,
@@ -179,7 +179,7 @@ async def async_setup_entry(
                 entry,
                 TOPIC_METER_VALUES.format(prefix=topic_prefix),
                 "Voltage L2",
-                "1",
+                METER_VALUE_ID_VOLTAGE_L2,
                 "V",
                 SensorDeviceClass.VOLTAGE,
                 None,
@@ -189,7 +189,7 @@ async def async_setup_entry(
                 entry,
                 TOPIC_METER_VALUES.format(prefix=topic_prefix),
                 "Voltage L3",
-                "2",
+                METER_VALUE_ID_VOLTAGE_L3,
                 "V",
                 SensorDeviceClass.VOLTAGE,
                 None,
@@ -200,7 +200,7 @@ async def async_setup_entry(
                 entry,
                 TOPIC_METER_VALUES.format(prefix=topic_prefix),
                 "Current L1",
-                "3",
+                METER_VALUE_ID_CURRENT_L1,
                 "A",
                 SensorDeviceClass.CURRENT,
                 None,
@@ -210,7 +210,7 @@ async def async_setup_entry(
                 entry,
                 TOPIC_METER_VALUES.format(prefix=topic_prefix),
                 "Current L2",
-                "4",
+                METER_VALUE_ID_CURRENT_L2,
                 "A",
                 SensorDeviceClass.CURRENT,
                 None,
@@ -220,7 +220,7 @@ async def async_setup_entry(
                 entry,
                 TOPIC_METER_VALUES.format(prefix=topic_prefix),
                 "Current L3",
-                "5",
+                METER_VALUE_ID_CURRENT_L3,
                 "A",
                 SensorDeviceClass.CURRENT,
                 None,
@@ -231,7 +231,7 @@ async def async_setup_entry(
                 entry,
                 TOPIC_METER_VALUES.format(prefix=topic_prefix),
                 "Power L1",
-                "6",
+                METER_VALUE_ID_POWER_L1,
                 "W",
                 SensorDeviceClass.POWER,
                 None,
@@ -241,7 +241,7 @@ async def async_setup_entry(
                 entry,
                 TOPIC_METER_VALUES.format(prefix=topic_prefix),
                 "Power L2",
-                "7",
+                METER_VALUE_ID_POWER_L2,
                 "W",
                 SensorDeviceClass.POWER,
                 None,
@@ -251,7 +251,7 @@ async def async_setup_entry(
                 entry,
                 TOPIC_METER_VALUES.format(prefix=topic_prefix),
                 "Power L3",
-                "8",
+                METER_VALUE_ID_POWER_L3,
                 "W",
                 SensorDeviceClass.POWER,
                 None,
@@ -261,7 +261,7 @@ async def async_setup_entry(
                 entry,
                 TOPIC_METER_VALUES.format(prefix=topic_prefix),
                 "Power",
-                "19",
+                METER_VALUE_ID_POWER_TOTAL,
                 "W",
                 SensorDeviceClass.POWER,
                 None,
@@ -272,7 +272,7 @@ async def async_setup_entry(
                 entry,
                 TOPIC_METER_VALUES.format(prefix=topic_prefix),
                 "Energy (total)",
-                "26",
+                METER_VALUE_ID_ENERGY_TOTAL,
                 "kWh",
                 SensorDeviceClass.ENERGY,
                 SensorStateClass.TOTAL_INCREASING,
@@ -387,10 +387,13 @@ class MabwarpMqttSensor(SensorEntity):
 
     def _extract_field(self, data: dict) -> Any:
         """Extract nested field value using dot notation or array index."""
-        # data is a list (float array) for meter values
         if isinstance(data, list):
+            if self._coordinator is not None:
+                index = self._coordinator.get_index(self._field_path)
+                if index is not None:
+                    return data[index]
+                return "unknown"
             return data[int(self._field_path)]
-        # fallback for dict (evse/state etc.)
         keys = self._field_path.split(".")
         value: Any = data
         for key in keys:
