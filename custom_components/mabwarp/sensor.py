@@ -144,7 +144,7 @@ async def async_setup_entry(
                 SensorDeviceClass.CURRENT,
                 None,
                 coordinator,
-                "mA",
+                0.001,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -353,6 +353,7 @@ async def async_setup_entry(
                 SensorDeviceClass.CURRENT,
                 None,
                 coordinator,
+                0.001,
             ),
         ]
     )
@@ -442,6 +443,8 @@ class MabwarpMqttSensor(SensorEntity):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
                 value = self._extract_field(data)
+                if self._conversion_factor is not None and isinstance(value, int | float):
+                    value = value * self._conversion_factor
                 self._attr_native_value = value
                 self.async_write_ha_state()
             except (
