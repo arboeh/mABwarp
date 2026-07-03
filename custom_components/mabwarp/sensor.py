@@ -22,14 +22,41 @@ from .const import (
     CONF_TOPIC_PREFIX,
     CONF_WARP_VERSION,
     DOMAIN,
+    METER_VALUE_ID_CURRENT_L1,
+    METER_VALUE_ID_CURRENT_L2,
+    METER_VALUE_ID_CURRENT_L3,
+    METER_VALUE_ID_ENERGY_TOTAL,
+    METER_VALUE_ID_POWER_L1,
+    METER_VALUE_ID_POWER_L2,
+    METER_VALUE_ID_POWER_L3,
+    METER_VALUE_ID_POWER_TOTAL,
+    METER_VALUE_ID_VOLTAGE_L1,
+    METER_VALUE_ID_VOLTAGE_L2,
+    METER_VALUE_ID_VOLTAGE_L3,
     TOPIC_CHARGE_MANAGER,
     TOPIC_EVSE_LOW_LEVEL,
     TOPIC_EVSE_STATE,
     TOPIC_METER_VALUES,
+    TOPIC_METER_VALUE_IDS,
     TOPIC_NFC_LAST_TAG,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class MeterValueCoordinator:
+    """Coordinates meter value IDs with array indices."""
+
+    def __init__(self, hass: HomeAssistant):
+        self.hass = hass
+        self._value_ids_mapping: dict[str, int] = {}
+        self._unsubscribe_value_ids = None
+
+    def update_value_ids_mapping(self, value_ids: list) -> None:
+        self._value_ids_mapping = {str(vid): idx for idx, vid in enumerate(value_ids)}
+
+    def get_index(self, meter_value_id: str) -> int | None:
+        return self._value_ids_mapping.get(meter_value_id)
 
 
 async def async_setup_entry(
@@ -39,6 +66,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up mABwarp sensors."""
     topic_prefix = entry.data[CONF_TOPIC_PREFIX]
+
+    coordinator = MeterValueCoordinator(hass)
+
+    async def value_ids_message_received(msg) -> None:
+        try:
+            payload = msg.payload
+            if isinstance(payload, bytes):
+                payload = payload.decode("utf-8")
+            data = json.loads(payload)
+            if isinstance(data, list):
+                coordinator.update_value_ids_mapping(data)
+        except (json.JSONDecodeError, TypeError, ValueError) as err:
+            _LOGGER.warning("Failed to parse value_ids message: %s", err)
+
+    coordinator._unsubscribe_value_ids = await mqtt.async_subscribe(
+        hass,
+        TOPIC_METER_VALUE_IDS.format(prefix=topic_prefix),
+        value_ids_message_received,
+        0,
+    )
 
     entities = []
 
@@ -53,6 +100,7 @@ async def async_setup_entry(
                 None,
                 None,
                 None,
+                coordinator,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -62,6 +110,7 @@ async def async_setup_entry(
                 None,
                 None,
                 None,
+                coordinator,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -71,6 +120,7 @@ async def async_setup_entry(
                 "mA",
                 None,
                 None,
+                coordinator,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -80,6 +130,7 @@ async def async_setup_entry(
                 None,
                 None,
                 None,
+                coordinator,
             ),
         ]
     )
@@ -95,6 +146,7 @@ async def async_setup_entry(
                 "%",
                 None,
                 None,
+                coordinator,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -104,6 +156,7 @@ async def async_setup_entry(
                 "s",
                 None,
                 None,
+                coordinator,
             ),
         ]
     )
@@ -120,6 +173,7 @@ async def async_setup_entry(
                 "V",
                 SensorDeviceClass.VOLTAGE,
                 None,
+                coordinator,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -129,6 +183,7 @@ async def async_setup_entry(
                 "V",
                 SensorDeviceClass.VOLTAGE,
                 None,
+                coordinator,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -138,6 +193,7 @@ async def async_setup_entry(
                 "V",
                 SensorDeviceClass.VOLTAGE,
                 None,
+                coordinator,
             ),
             # Current
             MabwarpMqttSensor(
@@ -148,6 +204,7 @@ async def async_setup_entry(
                 "A",
                 SensorDeviceClass.CURRENT,
                 None,
+                coordinator,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -157,6 +214,7 @@ async def async_setup_entry(
                 "A",
                 SensorDeviceClass.CURRENT,
                 None,
+                coordinator,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -166,6 +224,7 @@ async def async_setup_entry(
                 "A",
                 SensorDeviceClass.CURRENT,
                 None,
+                coordinator,
             ),
             # Power
             MabwarpMqttSensor(
@@ -176,6 +235,7 @@ async def async_setup_entry(
                 "W",
                 SensorDeviceClass.POWER,
                 None,
+                coordinator,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -185,6 +245,7 @@ async def async_setup_entry(
                 "W",
                 SensorDeviceClass.POWER,
                 None,
+                coordinator,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -194,6 +255,7 @@ async def async_setup_entry(
                 "W",
                 SensorDeviceClass.POWER,
                 None,
+                coordinator,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -203,6 +265,7 @@ async def async_setup_entry(
                 "W",
                 SensorDeviceClass.POWER,
                 None,
+                coordinator,
             ),
             # Energy
             MabwarpMqttSensor(
@@ -213,6 +276,7 @@ async def async_setup_entry(
                 "kWh",
                 SensorDeviceClass.ENERGY,
                 SensorStateClass.TOTAL_INCREASING,
+                coordinator,
             ),
         ]
     )
@@ -228,6 +292,7 @@ async def async_setup_entry(
                 None,
                 None,
                 None,
+                coordinator,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -237,6 +302,7 @@ async def async_setup_entry(
                 None,
                 SensorDeviceClass.TIMESTAMP,
                 None,
+                coordinator,
             ),
         ]
     )
@@ -252,6 +318,7 @@ async def async_setup_entry(
                 None,
                 None,
                 None,
+                coordinator,
             ),
             MabwarpMqttSensor(
                 entry,
@@ -261,6 +328,7 @@ async def async_setup_entry(
                 "mA",
                 None,
                 None,
+                coordinator,
             ),
         ]
     )
@@ -280,11 +348,13 @@ class MabwarpMqttSensor(SensorEntity):
         unit: str | None,
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,
+        coordinator: MeterValueCoordinator | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._config_entry = config_entry
         self._topic = topic
         self._field_path = field_path
+        self._coordinator = coordinator
         self._unsubscribe = None
 
         self._attr_name = f"WARP {name}"
