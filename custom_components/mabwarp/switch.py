@@ -6,7 +6,7 @@ import json
 import logging
 from typing import Any
 
-from homeassistant.components.mqtt import async_publish, async_subscribe
+from homeassistant.components.mqtt.client import async_publish, async_subscribe
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

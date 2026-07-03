@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 
-from homeassistant.components.mqtt import async_publish, async_subscribe
+from homeassistant.components.mqtt.client import async_publish, async_subscribe
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
