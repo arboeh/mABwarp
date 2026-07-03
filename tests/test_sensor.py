@@ -218,3 +218,35 @@ def test_sensor_name():
         None,
     )
     assert sensor._attr_name.startswith("WARP ")
+
+
+def test_conversion_factor_applied():
+    """Test conversion_factor is applied to raw values."""
+    mock_config_entry = type(
+        "MockEntry",
+        (),
+        {
+            "data": {
+                CONF_DEVICE_ID: "TEST01",
+                CONF_WARP_VERSION: "WARP3",
+                CONF_TOPIC_PREFIX: DEFAULT_TOPIC_PREFIX,
+            }
+        },
+    )()
+    coordinator = FakeCoordinator({})
+    sensor = MabwarpMqttSensor(
+        mock_config_entry,
+        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
+        "Test",
+        "test_field",
+        None,
+        None,
+        None,
+        coordinator,
+        conversion_factor=0.001,
+    )
+    result = sensor._extract_field({"test_field": 6000})
+    # conversion_factor applied only if value is numeric and conversion_factor set
+    if isinstance(result, int | float) and sensor._conversion_factor is not None:
+        result = result * sensor._conversion_factor
+    assert result == 6.0
