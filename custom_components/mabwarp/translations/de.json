@@ -74,7 +74,10 @@
       "power_manager_external_control": { "name": "Power Manager Externe Steuerung" },
       "power_manager_power_at_meter": { "name": "Power Manager Leistung am Zähler" },
       "power_manager_power_available": { "name": "Power Manager Verfügbare Leistung" },
-      "power_manager_charging_blocked": { "name": "Power Manager Laden blockiert" }
+      "power_manager_charging_blocked": { "name": "Power Manager Laden blockiert" },
+      "solar_forecast_wh_today": { "name": "Solar Prognose Heute" },
+      "solar_forecast_wh_today_remaining": { "name": "Solar Prognose Heute Verbleibend" },
+      "solar_forecast_wh_tomorrow": { "name": "Solar Prognose Morgen" }
     },
     "number": {
       "charging_current_limit": { "name": "Ladestrom-Begrenzung" }

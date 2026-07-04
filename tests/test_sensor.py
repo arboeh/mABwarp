@@ -6,6 +6,8 @@ import json
 import logging
 from unittest.mock import MagicMock, patch
 
+from homeassistant.components.sensor import SensorDeviceClass
+
 from custom_components.mabwarp.const import (
     CONF_DEVICE_ID,
     CONF_FEATURES,
@@ -24,6 +26,9 @@ from custom_components.mabwarp.const import (
     TOPIC_POWER_MANAGER_CHARGE_MODE,
     TOPIC_POWER_MANAGER_LOW_LEVEL_STATE,
     TOPIC_POWER_MANAGER_STATE,
+    TOPIC_SOLAR_FORECAST_PLANES_CONFIG,
+    TOPIC_SOLAR_FORECAST_PLANES_STATE,
+    TOPIC_SOLAR_FORECAST_STATE,
 )
 from custom_components.mabwarp.sensor import (
     MabwarpChargeModeSensor,
@@ -32,9 +37,11 @@ from custom_components.mabwarp.sensor import (
     MabwarpFeaturesSensor,
     MabwarpLastChargeSensor,
     MabwarpMqttSensor,
+    MabwarpSolarForecastValueSensor,
+    MabwarpSolarPlaneConfigSensor,
+    MabwarpSolarPlaneStateSensor,
     async_setup_entry,
 )
-from homeassistant.components.sensor import SensorDeviceClass
 
 
 class FakeCoordinator:
@@ -540,6 +547,7 @@ def test_charge_mode_sensor_maps_mode_to_text():
         mode = data.get("mode")
         if mode is not None:
             from custom_components.mabwarp.const import CHARGE_MODE_MAP
+
             sensor._attr_native_value = CHARGE_MODE_MAP.get(int(mode), f"Unknown ({mode})")
             sensor._attr_extra_state_attributes = {"mode": int(mode)}
         sensor.async_write_ha_state()
@@ -576,6 +584,7 @@ def test_charge_mode_sensor_unknown_mode():
         mode = data.get("mode")
         if mode is not None:
             from custom_components.mabwarp.const import CHARGE_MODE_MAP
+
             sensor._attr_native_value = CHARGE_MODE_MAP.get(int(mode), f"Unknown ({mode})")
             sensor._attr_extra_state_attributes = {"mode": int(mode)}
         sensor.async_write_ha_state()
@@ -603,7 +612,18 @@ def test_config_error_flags_sensor_decodes_bits():
             if flags is not None:
                 sensor._attr_native_value = int(flags)
                 decoded = {}
-                for idx, flag_name in enumerate(["config_error_0", "config_error_1", "config_error_2", "config_error_3", "config_error_4", "config_error_5", "config_error_6", "config_error_7"]):
+                for idx, flag_name in enumerate(
+                    [
+                        "config_error_0",
+                        "config_error_1",
+                        "config_error_2",
+                        "config_error_3",
+                        "config_error_4",
+                        "config_error_5",
+                        "config_error_6",
+                        "config_error_7",
+                    ]
+                ):
                     decoded[flag_name] = bool(int(flags) & (1 << idx))
                 sensor._attr_extra_state_attributes = decoded
             sensor.async_write_ha_state()
@@ -659,3 +679,83 @@ def test_power_manager_low_level_sensors_parse_correctly():
     assert sensors[0].extract_field(payload) == 1500
     assert sensors[1].extract_field(payload) == 3200
     assert sensors[2].extract_field(payload) is False
+
+
+def test_solar_forecast_sensors_skipped_without_feature():
+    """Test solar_forecast sensors are skipped when feature is not present."""
+    entry = _make_mock_entry(features=["evse"])
+    added = []
+
+    def async_add_entities(entities):
+        added.extend(entities)
+
+    with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+
+    for entity in added:
+        topic = entity._topic
+        assert TOPIC_SOLAR_FORECAST_STATE.format(prefix=DEFAULT_TOPIC_PREFIX) not in topic
+
+
+def test_solar_forecast_sensors_created_with_feature():
+    """Test solar_forecast sensors are created when feature is present."""
+    entry = _make_mock_entry(features=["solar_forecast"])
+    added = []
+
+    def async_add_entities(entities):
+        added.extend(entities)
+
+    with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+
+    solar_topics = [TOPIC_SOLAR_FORECAST_STATE.format(prefix=DEFAULT_TOPIC_PREFIX)]
+    for topic in solar_topics:
+        assert any(e._topic == topic for e in added)
+
+
+def test_solar_forecast_value_sensor_maps_minus_one_to_none():
+    """Test solar forecast sensor maps -1 to None."""
+    entry = _make_mock_entry(features=["solar_forecast"])
+    sensor = MabwarpSolarForecastValueSensor(entry, DEFAULT_TOPIC_PREFIX, "wh_today")
+    assert sensor.extract_field({"wh_today": -1}) is None
+    assert sensor.extract_field({"wh_today": 5000}) == 5000
+
+
+def test_solar_forecast_value_sensor_unique_id():
+    """Test solar forecast value sensor unique_id contains field name."""
+    entry = _make_mock_entry(features=["solar_forecast"])
+    sensor = MabwarpSolarForecastValueSensor(entry, DEFAULT_TOPIC_PREFIX, "wh_today")
+    assert "wh_today" in sensor.unique_id
+
+
+def test_solar_plane_state_sensor_topic_contains_index():
+    """Test solar plane state sensor topic contains plane index."""
+    entry = _make_mock_entry(features=["solar_forecast"])
+    sensor = MabwarpSolarPlaneStateSensor(entry, DEFAULT_TOPIC_PREFIX, 2)
+    assert "planes/2/state" in sensor._topic
+
+
+def test_solar_plane_config_sensor_parses_fields():
+    """Test solar plane config sensor parses name and wp."""
+    entry = _make_mock_entry(features=["solar_forecast"])
+    sensor = MabwarpSolarPlaneConfigSensor(entry, DEFAULT_TOPIC_PREFIX, 1)
+    sensor.async_write_ha_state = lambda: None
+
+    def message_received(msg) -> None:
+        payload = msg.payload
+        if isinstance(payload, bytes):
+            payload = payload.decode("utf-8")
+        data = json.loads(payload)
+        sensor._attr_native_value = data.get("wp")
+        sensor._attr_extra_state_attributes = {
+            "name": data.get("name"),
+            "place": data.get("place"),
+        }
+        sensor.async_write_ha_state()
+
+    msg = MagicMock()
+    msg.payload = b'{"name": "Roof", "place": "North", "wp": 8.5}'
+    message_received(msg)
+    assert sensor._attr_native_value == 8.5
+    assert sensor._attr_extra_state_attributes["name"] == "Roof"
+    assert sensor._attr_extra_state_attributes["place"] == "North"
