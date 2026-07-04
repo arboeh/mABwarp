@@ -77,17 +77,24 @@
       "power_manager_charging_blocked": { "name": "Power Manager Laden blockiert" },
       "solar_forecast_wh_today": { "name": "Solar Prognose Heute" },
       "solar_forecast_wh_today_remaining": { "name": "Solar Prognose Heute Verbleibend" },
-      "solar_forecast_wh_tomorrow": { "name": "Solar Prognose Morgen" }
+      "solar_forecast_wh_tomorrow": { "name": "Solar Prognose Morgen" },
+      "charge_limits_start_timestamp_ms": { "name": "Ladegrenzen Startzeit" },
+      "charge_limits_target_timestamp_ms": { "name": "Ladegrenzen Zielzeit" },
+      "charge_limits_start_energy_kwh": { "name": "Ladegrenzen Startenergie" },
+      "charge_limits_target_energy_kwh": { "name": "Ladegrenzen Zielenergie" }
     },
     "number": {
-      "charging_current_limit": { "name": "Ladestrom-Begrenzung" }
+      "charging_current_limit": { "name": "Ladestrom-Begrenzung" },
+      "charge_limits_duration": { "name": "Ladegrenzen Standarddauer" },
+      "charge_limits_energy_wh": { "name": "Ladegrenzen Standardenergie" }
     },
     "switch": {
       "user_enabled": { "name": "Wallbox aktiv" }
     },
     "button": {
       "start_charging": { "name": "Ladevorgang starten" },
-      "stop_charging": { "name": "Ladevorgang beenden" }
+      "stop_charging": { "name": "Ladevorgang beenden" },
+      "restart_charge_limits": { "name": "Ladegrenzen neu starten" }
     },
     "binary_sensor": {
       "power_manager_is_3phase": { "name": "Power Manager 3-Phasen" }

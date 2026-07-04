@@ -6,6 +6,7 @@ from custom_components.mabwarp.const import (
     CONF_TOPIC_PREFIX,
     CONF_WARP_VERSION,
     DEFAULT_TOPIC_PREFIX,
+    TOPIC_CHARGE_LIMITS_RESTART,
     TOPIC_EVSE_START,
     TOPIC_EVSE_STOP,
 )
@@ -82,3 +83,25 @@ def test_button_icons():
     )
     assert start_button._attr_icon == "mdi:play-circle"
     assert stop_button._attr_icon == "mdi:stop-circle"
+
+
+def test_restart_charge_limits_button_unique_id():
+    """Test restart charge limits button unique_id contains charge_limits_restart."""
+    mock_config_entry = type(
+        "MockEntry",
+        (),
+        {
+            "data": {
+                CONF_DEVICE_ID: "TEST01",
+                CONF_WARP_VERSION: "WARP3",
+                CONF_TOPIC_PREFIX: DEFAULT_TOPIC_PREFIX,
+            }
+        },
+    )()
+    button = MabwarpButtonBase(
+        mock_config_entry,
+        "Restart Charge Limits",
+        TOPIC_CHARGE_LIMITS_RESTART.format(prefix=DEFAULT_TOPIC_PREFIX),
+        "mdi:restart",
+    )
+    assert "charge_limits_restart" in button.unique_id

@@ -6,7 +6,11 @@ from custom_components.mabwarp.const import (
     CONF_WARP_VERSION,
     DEFAULT_TOPIC_PREFIX,
 )
-from custom_components.mabwarp.number import MabwarpChargingCurrentNumber
+from custom_components.mabwarp.number import (
+    MabwarpChargingCurrentNumber,
+    MabwarpChargeLimitsDurationNumber,
+    MabwarpChargeLimitsEnergyNumber,
+)
 
 
 def test_number_unique_id():
@@ -62,3 +66,77 @@ def test_number_initial_value():
     )()
     number = MabwarpChargingCurrentNumber(mock_config_entry)
     assert number._attr_native_value == 0
+
+
+def test_charge_limits_duration_number_unique_id():
+    """Test charge limits duration number unique_id."""
+    mock_config_entry = type(
+        "MockEntry",
+        (),
+        {
+            "data": {
+                CONF_DEVICE_ID: "TEST01",
+                CONF_WARP_VERSION: "WARP3",
+                CONF_TOPIC_PREFIX: DEFAULT_TOPIC_PREFIX,
+            }
+        },
+    )()
+    number = MabwarpChargeLimitsDurationNumber(mock_config_entry)
+    assert "charge_limits_duration" in number.unique_id
+
+
+def test_charge_limits_duration_number_limits():
+    """Test charge limits duration number limits."""
+    mock_config_entry = type(
+        "MockEntry",
+        (),
+        {
+            "data": {
+                CONF_DEVICE_ID: "TEST01",
+                CONF_WARP_VERSION: "WARP3",
+                CONF_TOPIC_PREFIX: DEFAULT_TOPIC_PREFIX,
+            }
+        },
+    )()
+    number = MabwarpChargeLimitsDurationNumber(mock_config_entry)
+    assert number._attr_native_min_value == 0
+    assert number._attr_native_max_value == 24
+    assert number._attr_native_step == 0.5
+    assert number._attr_native_unit_of_measurement == "h"
+
+
+def test_charge_limits_energy_number_unique_id():
+    """Test charge limits energy number unique_id."""
+    mock_config_entry = type(
+        "MockEntry",
+        (),
+        {
+            "data": {
+                CONF_DEVICE_ID: "TEST01",
+                CONF_WARP_VERSION: "WARP3",
+                CONF_TOPIC_PREFIX: DEFAULT_TOPIC_PREFIX,
+            }
+        },
+    )()
+    number = MabwarpChargeLimitsEnergyNumber(mock_config_entry)
+    assert "charge_limits_energy_wh" in number.unique_id
+
+
+def test_charge_limits_energy_number_limits():
+    """Test charge limits energy number limits."""
+    mock_config_entry = type(
+        "MockEntry",
+        (),
+        {
+            "data": {
+                CONF_DEVICE_ID: "TEST01",
+                CONF_WARP_VERSION: "WARP3",
+                CONF_TOPIC_PREFIX: DEFAULT_TOPIC_PREFIX,
+            }
+        },
+    )()
+    number = MabwarpChargeLimitsEnergyNumber(mock_config_entry)
+    assert number._attr_native_min_value == 0
+    assert number._attr_native_max_value == 100000
+    assert number._attr_native_step == 100
+    assert number._attr_native_unit_of_measurement == "Wh"

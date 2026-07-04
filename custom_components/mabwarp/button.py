@@ -16,6 +16,7 @@ from .const import (
     CONF_TOPIC_PREFIX,
     CONF_WARP_VERSION,
     DOMAIN,
+    TOPIC_CHARGE_LIMITS_RESTART,
     TOPIC_EVSE_START,
     TOPIC_EVSE_STOP,
 )
@@ -30,20 +31,34 @@ async def async_setup_entry(
 ) -> None:
     """Set up mABwarp buttons."""
     topic_prefix = entry.data[CONF_TOPIC_PREFIX]
+    features = entry.data.get("features", [])
 
-    start_button = MabwarpButtonBase(
-        entry,
-        "Start Charging",
-        TOPIC_EVSE_START.format(prefix=topic_prefix),
-        "mdi:play-circle",
-    )
-    stop_button = MabwarpButtonBase(
-        entry,
-        "Stop Charging",
-        TOPIC_EVSE_STOP.format(prefix=topic_prefix),
-        "mdi:stop-circle",
-    )
-    async_add_entities([start_button, stop_button])
+    entities = [
+        MabwarpButtonBase(
+            entry,
+            "Start Charging",
+            TOPIC_EVSE_START.format(prefix=topic_prefix),
+            "mdi:play-circle",
+        ),
+        MabwarpButtonBase(
+            entry,
+            "Stop Charging",
+            TOPIC_EVSE_STOP.format(prefix=topic_prefix),
+            "mdi:stop-circle",
+        ),
+    ]
+
+    if "charge_limits" in features:
+        entities.append(
+            MabwarpButtonBase(
+                entry,
+                "Restart Charge Limits",
+                TOPIC_CHARGE_LIMITS_RESTART.format(prefix=topic_prefix),
+                "mdi:restart",
+            )
+        )
+
+    async_add_entities(entities)
 
 
 class MabwarpButtonBase(ButtonEntity):

@@ -77,17 +77,24 @@
       "power_manager_charging_blocked": { "name": "Power Manager Charging Blocked" },
       "solar_forecast_wh_today": { "name": "Solar Forecast Today" },
       "solar_forecast_wh_today_remaining": { "name": "Solar Forecast Today Remaining" },
-      "solar_forecast_wh_tomorrow": { "name": "Solar Forecast Tomorrow" }
+      "solar_forecast_wh_tomorrow": { "name": "Solar Forecast Tomorrow" },
+      "charge_limits_start_timestamp_ms": { "name": "Charge Limits Start Timestamp" },
+      "charge_limits_target_timestamp_ms": { "name": "Charge Limits Target Timestamp" },
+      "charge_limits_start_energy_kwh": { "name": "Charge Limits Start Energy" },
+      "charge_limits_target_energy_kwh": { "name": "Charge Limits Target Energy" }
     },
     "number": {
-      "charging_current_limit": { "name": "Charging Current Limit" }
+      "charging_current_limit": { "name": "Charging Current Limit" },
+      "charge_limits_duration": { "name": "Charge Limits Default Duration" },
+      "charge_limits_energy_wh": { "name": "Charge Limits Default Energy" }
     },
     "switch": {
       "user_enabled": { "name": "Wallbox Enabled" }
     },
     "button": {
       "start_charging": { "name": "Start Charging" },
-      "stop_charging": { "name": "Stop Charging" }
+      "stop_charging": { "name": "Stop Charging" },
+      "restart_charge_limits": { "name": "Restart Charge Limits" }
     },
     "binary_sensor": {
       "power_manager_is_3phase": { "name": "Power Manager 3-Phase" }
