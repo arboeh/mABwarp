@@ -96,7 +96,7 @@ def test_sensor_device_info():
     assert (DOMAIN, "TEST01") in device_info["identifiers"]
 
 
-def test_extract_field_simple():
+def testextract_field_simple():
     """Test simple field extraction."""
     mock_config_entry = type(
         "MockEntry",
@@ -119,11 +119,11 @@ def test_extract_field_simple():
         None,
         None,
     )
-    result = sensor._extract_field({"power": 1500.0})
+    result = sensor.extract_field({"power": 1500.0})
     assert result == 1500.0
 
 
-def test_extract_field_meter_array_with_mapping():
+def testextract_field_meter_array_with_mapping():
     """Test meter array extraction using value_ids mapping."""
     mock_config_entry = type(
         "MockEntry",
@@ -149,11 +149,11 @@ def test_extract_field_meter_array_with_mapping():
         coordinator,
     )
     meter_data = [10.0, 11.0, 12.0, 13.0, 14.0, 230.0]
-    result = sensor._extract_field(meter_data)
+    result = sensor.extract_field(meter_data)
     assert result == 230.0
 
 
-def test_extract_field_meter_array_when_mapping_missing():
+def testextract_field_meter_array_when_mapping_missing():
     """Test meter array returns unknown when value_ids not received."""
     mock_config_entry = type(
         "MockEntry",
@@ -178,11 +178,11 @@ def test_extract_field_meter_array_when_mapping_missing():
         coordinator,
     )
     meter_data = [10.0, 11.0, 12.0]
-    result = sensor._extract_field(meter_data)
+    result = sensor.extract_field(meter_data)
     assert result == "unknown"
 
 
-def test_extract_field_meter_array_changed_order():
+def testextract_field_meter_array_changed_order():
     """Test meter array extraction when value_ids order changes."""
     mock_config_entry = type(
         "MockEntry",
@@ -208,7 +208,7 @@ def test_extract_field_meter_array_changed_order():
         coordinator,
     )
     meter_data = [100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 230.0]
-    result = sensor._extract_field(meter_data)
+    result = sensor.extract_field(meter_data)
     assert result == 230.0
 
 
@@ -263,7 +263,7 @@ def test_conversion_factor_applied():
         coordinator,
         conversion_factor=0.001,
     )
-    result = sensor._extract_field({"test_field": 6000})
+    result = sensor.extract_field({"test_field": 6000})
     if isinstance(result, int | float) and sensor._conversion_factor is not None:
         result = result * sensor._conversion_factor
     assert result == 6.0
@@ -350,7 +350,7 @@ def test_firmware_version_sensor_parses_correctly():
         coordinator=None,
     )
     payload = {"firmware": "1.2.3", "config": "abc", "config_type": "release"}
-    result = sensor._extract_field(payload)
+    result = sensor.extract_field(payload)
     assert result == "1.2.3"
 
 
@@ -358,36 +358,15 @@ def test_current_charge_sensor_idle_when_no_session():
     """Test current charge user ID sensor returns None when user_id is -1."""
     entry = _make_mock_entry(features=["charge_tracker"])
     sensor = MabwarpCurrentChargeUserIDSensor(entry, DEFAULT_TOPIC_PREFIX)
-    msg = MagicMock()
-    msg.payload = (
-        b'{"user_id": -1, "meter_start": 0.0, "evse_uptime_start": 0, '
-        b'"timestamp_minutes": 0, "authorization_type": 0}'
-    )
-    sensor._extract_field = MagicMock(return_value=-1)
-    sensor.async_write_ha_state = MagicMock()
-
-    def message_received(msg) -> None:
-        try:
-            payload = msg.payload
-            if isinstance(payload, bytes):
-                payload = payload.decode("utf-8")
-            data = json.loads(payload)
-            value = sensor._extract_field(data)
-            if value == -1:
-                value = None
-            sensor._attr_native_value = value
-            sensor.async_write_ha_state()
-        except (
-            json.JSONDecodeError,
-            KeyError,
-            IndexError,
-            TypeError,
-            ValueError,
-        ) as err:
-            logging.warning("Failed to parse current_charge message on %s: %s", sensor._topic, err)
-
-    message_received(msg)
-    assert sensor._attr_native_value is None
+    payload = {
+        "user_id": -1,
+        "meter_start": 0.0,
+        "evse_uptime_start": 0,
+        "timestamp_minutes": 0,
+        "authorization_type": 0,
+    }
+    result = sensor.extract_field(payload)
+    assert result is None
 
 
 def test_last_charge_sensor_uses_latest_entry():

@@ -533,7 +533,7 @@ class MabwarpMqttSensor(SensorEntity):
                 if isinstance(payload, bytes):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
-                value = self._extract_field(data)
+                value = self.extract_field(data)
                 if self._conversion_factor is not None and isinstance(value, int | float):
                     value = value * self._conversion_factor
                 self._attr_native_value = value
@@ -555,7 +555,7 @@ class MabwarpMqttSensor(SensorEntity):
             self._unsubscribe()
             self._unsubscribe = None
 
-    def _extract_field(self, data: dict) -> Any:
+    def extract_field(self, data: dict) -> Any:
         """Extract nested field value using dot notation or array index."""
         if isinstance(data, list):
             if self._coordinator is not None:
@@ -678,30 +678,9 @@ class MabwarpCurrentChargeUserIDSensor(MabwarpMqttSensor):
             coordinator=None,
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to MQTT topic when added to Home Assistant."""
-
-        def message_received(msg) -> None:
-            try:
-                payload = msg.payload
-                if isinstance(payload, bytes):
-                    payload = payload.decode("utf-8")
-                data = json.loads(payload)
-                value = self._extract_field(data)
-                if value == -1:
-                    value = None
-                self._attr_native_value = value
-                self.async_write_ha_state()
-            except (
-                json.JSONDecodeError,
-                KeyError,
-                IndexError,
-                TypeError,
-                ValueError,
-            ) as err:
-                _LOGGER.warning("Failed to parse current_charge message on %s: %s", self._topic, err)
-
-        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
+    def extract_field(self, data: dict) -> Any:
+        value = super().extract_field(data)
+        return None if value == -1 else value
 
 
 class MabwarpLastChargeSensor(SensorEntity):
