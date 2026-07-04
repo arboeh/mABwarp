@@ -17,6 +17,7 @@ from custom_components.mabwarp.const import (
     DOMAIN,
     METER_VALUE_ID_VOLTAGE_L1,
     TOPIC_CHARGE_LIMITS_STATE,
+    TOPIC_CHARGE_MANAGER,
     TOPIC_CHARGE_TRACKER_CURRENT,
     TOPIC_CHARGE_TRACKER_LAST,
     TOPIC_CHARGE_TRACKER_STATE,
@@ -980,3 +981,117 @@ def test_temperature_discovery_creates_background_task():
 def _is_coroutine(obj):
     """Check if object is a coroutine function."""
     return asyncio.iscoroutinefunction(obj) or asyncio.iscoroutine(obj)
+
+
+def test_no_duplicate_unique_ids():
+    """Test that no two entities have the same unique_id after async_setup_entry."""
+    import asyncio
+    from unittest.mock import patch
+
+    entry = _make_mock_entry(features=[])
+    added = []
+
+    def async_add_entities(entities):
+        added.extend(entities)
+
+    async def run_test():
+        with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+            await async_setup_entry(_make_mock_hass(), entry, async_add_entities)
+
+    asyncio.run(run_test())
+
+    unique_ids = [e.unique_id for e in added]
+    assert len(unique_ids) == len(
+        set(unique_ids)
+    ), f"Duplicate unique_ids found: {[uid for uid in unique_ids if unique_ids.count(uid) > 1]}"
+
+
+def test_alloc_field_extraction_from_charge_manager_state():
+    """Test extract_field correctly extracts alloc[idx] from charge_manager/state payload.
+
+    Real payload from warp3/charge_manager/state (mosquitto_sub):
+    {'state': 0, 'l_raw': [0, 0, 0, 0], 'l_min': [0, 0, 0, 0], 'l_spread': [0, 0, 0, 0],
+     'l_max_pv': 0, 'alloc': [0, 0, 0, 0], 'chargers': []}
+    """
+    mock_config_entry = _make_mock_entry(features=[])
+    sensor = MabwarpMqttSensor(
+        mock_config_entry,
+        TOPIC_CHARGE_MANAGER.format(prefix=DEFAULT_TOPIC_PREFIX),
+        "Allocated Current Slot 0",
+        "alloc.0",
+        "A",
+        SensorDeviceClass.CURRENT,
+        None,
+        coordinator=None,
+    )
+
+    # Test real payload structure
+    payload = {
+        "state": 0,
+        "l_raw": [0, 0, 0, 0],
+        "l_min": [0, 0, 0, 0],
+        "l_spread": [0, 0, 0, 0],
+        "l_max_pv": 0,
+        "alloc": [0, 0, 0, 0],
+        "chargers": [],
+    }
+    assert sensor.extract_field(payload) == 0
+
+    # Test with non-zero values
+    payload_with_values = {
+        "state": 1,
+        "alloc": [16000, 0, 0, 0],
+        "chargers": [],
+    }
+    assert sensor.extract_field(payload_with_values) == 16000
+
+
+def test_alloc_slots_have_unique_names():
+    """Test that the 4 alloc slot sensors have distinct unique_ids and names."""
+    import asyncio
+    from unittest.mock import patch
+
+    entry = _make_mock_entry(features=[])
+    added = []
+
+    def async_add_entities(entities):
+        added.extend(entities)
+
+    async def run_test():
+        with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+            await async_setup_entry(_make_mock_hass(), entry, async_add_entities)
+
+    asyncio.run(run_test())
+
+    alloc_sensors = [e for e in added if "allocated_current" in e.unique_id.lower() or "alloc_" in e.unique_id.lower()]
+
+    # Should have 4 alloc sensors now (one for each slot)
+    assert len(alloc_sensors) == 4, f"Expected 4 alloc sensors, found {len(alloc_sensors)}"
+
+    alloc_unique_ids = [e.unique_id for e in alloc_sensors]
+    assert len(alloc_unique_ids) == len(set(alloc_unique_ids)), f"Duplicate alloc unique_ids: {alloc_unique_ids}"
+
+
+def test_message_received_uses_call_soon_threadsafe():
+    """Test that message_received calls async_write_ha_state via call_soon_threadsafe.
+
+    This is a regression test for the thread-safety bug where async_write_ha_state
+    was called directly from the MQTT callback instead of via call_soon_threadsafe.
+    """
+    import inspect
+
+    mock_config_entry = _make_mock_entry()
+    sensor = MabwarpMqttSensor(
+        mock_config_entry,
+        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
+        "Test",
+        "test_field",
+        None,
+        None,
+        None,
+        None,
+    )
+
+    # Verify the code structure by inspecting the source - it should use call_soon_threadsafe
+    source = inspect.getsource(sensor.async_added_to_hass)
+    assert "call_soon_threadsafe" in source, "async_added_to_hass should use call_soon_threadsafe for thread safety"
