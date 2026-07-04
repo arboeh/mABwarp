@@ -82,7 +82,9 @@
       "charge_limits_target_timestamp_ms": { "name": "Ladegrenzen Zielzeit" },
       "charge_limits_start_energy_kwh": { "name": "Ladegrenzen Startenergie" },
       "charge_limits_target_energy_kwh": { "name": "Ladegrenzen Zielenergie" },
-      "temperature_current": { "name": "Temperatur Aktuell" }
+      "temperature_current": { "name": "Temperatur Aktuell" },
+      "p14a_enwg_throttled": { "name": "P14A ENWG Gedrosselt" },
+      "p14a_enwg_max_power": { "name": "P14A ENWG Max Leistung" }
     },
     "number": {
       "charging_current_limit": { "name": "Ladestrom-Begrenzung" },

@@ -31,6 +31,7 @@ from custom_components.mabwarp.const import (
     TOPIC_SOLAR_FORECAST_STATE,
     TOPIC_CHARGE_LIMITS_STATE,
     TOPIC_TEMPERATURES_STATE,
+    TOPIC_P14A_ENWG_STATE,
 )
 from custom_components.mabwarp.sensor import (
     MabwarpChargeLimitsEnergySensor,
@@ -41,6 +42,8 @@ from custom_components.mabwarp.sensor import (
     MabwarpFeaturesSensor,
     MabwarpLastChargeSensor,
     MabwarpMqttSensor,
+    MabwarpP14aEnwgMaxPowerSensor,
+    MabwarpP14aEnwgThrottledBinarySensor,
     MabwarpSolarForecastValueSensor,
     MabwarpSolarPlaneConfigSensor,
     MabwarpSolarPlaneStateSensor,
@@ -869,3 +872,62 @@ def test_temperature_sensor_device_class_and_unit():
     sensor = MabwarpTemperatureSensor(entry, DEFAULT_TOPIC_PREFIX, "Temperature Current", "current")
     assert sensor._attr_device_class == SensorDeviceClass.TEMPERATURE
     assert sensor._attr_native_unit_of_measurement == "°C"
+
+
+def test_p14a_enwg_sensors_skipped_without_feature():
+    """Test p14a_enwg sensors are skipped when feature is not present."""
+    entry = _make_mock_entry(features=["evse"])
+    added = []
+
+    def async_add_entities(entities):
+        added.extend(entities)
+
+    with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+
+    for entity in added:
+        topic = entity._topic
+        assert TOPIC_P14A_ENWG_STATE.format(prefix=DEFAULT_TOPIC_PREFIX) not in topic
+
+
+def test_p14a_enwg_sensors_created_with_feature():
+    """Test p14a_enwg sensors are created when feature is present."""
+    entry = _make_mock_entry(features=["p14a_enwg"])
+    added = []
+
+    def async_add_entities(entities):
+        added.extend(entities)
+
+    with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+
+    p14a_topics = [TOPIC_P14A_ENWG_STATE.format(prefix=DEFAULT_TOPIC_PREFIX)]
+    for topic in p14a_topics:
+        assert any(e._topic == topic for e in added)
+
+
+def test_p14a_enwg_throttled_binary_sensor_parses_throttled_field():
+    """Test P14A ENWG throttled binary sensor parses throttled field."""
+    entry = _make_mock_entry(features=["p14a_enwg"])
+    sensor = MabwarpP14aEnwgThrottledBinarySensor(entry, DEFAULT_TOPIC_PREFIX)
+    sensor.async_write_ha_state = lambda: None
+
+    def message_received(msg) -> None:
+        payload = msg.payload
+        if isinstance(payload, bytes):
+            payload = payload.decode("utf-8")
+        data = json.loads(payload)
+        sensor._attr_is_on = bool(data.get("throttled", False))
+        sensor.async_write_ha_state()
+
+    msg = MagicMock()
+    msg.payload = b'{"throttled": true}'
+    message_received(msg)
+    assert sensor._attr_is_on is True
+
+
+def test_p14a_enwg_max_power_sensor_parses_max_power():
+    """Test P14A ENWG max power sensor parses max_power field."""
+    entry = _make_mock_entry(features=["p14a_enwg"])
+    sensor = MabwarpP14aEnwgMaxPowerSensor(entry, DEFAULT_TOPIC_PREFIX)
+    assert sensor.extract_field({"max_power": 4200}) == 4200

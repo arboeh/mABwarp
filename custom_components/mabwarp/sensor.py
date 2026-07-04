@@ -7,6 +7,7 @@ import json
 import logging
 from typing import Any
 
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.mqtt.client import async_subscribe
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -59,6 +60,7 @@ from .const import (
     TOPIC_SOLAR_FORECAST_STATE,
     TOPIC_CHARGE_LIMITS_STATE,
     TOPIC_TEMPERATURES_STATE,
+    TOPIC_P14A_ENWG_STATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -660,6 +662,20 @@ async def async_setup_entry(
                     async_add_entities(temp_entities)
 
         hass.create_task(_discover_temperature_keys())
+
+    # P14A ENWG sensors
+    has_p14a_enwg = "p14a_enwg" in features
+    if has_p14a_enwg:
+        entities.extend(
+            [
+                # ASSUMPTION (not yet verified against real hardware):
+                # Field names 'throttled' and 'max_power' are assumed based on
+                # typical ENWG 14a payload structures. TODO: verify with real
+                # payload before first release.
+                MabwarpP14aEnwgThrottledBinarySensor(entry, topic_prefix),
+                MabwarpP14aEnwgMaxPowerSensor(entry, topic_prefix),
+            ]
+        )
 
     # Features sensor
     entities.append(MabwarpFeaturesSensor(entry, topic_prefix))
@@ -1316,6 +1332,81 @@ class MabwarpChargeLimitsEnergySensor(MabwarpMqttSensor):
     def extract_field(self, data: dict) -> Any:
         value = super().extract_field(data)
         return None if value is None else value
+
+
+class MabwarpP14aEnwgThrottledBinarySensor(BinarySensorEntity):
+    """Binary sensor for P14A ENWG throttling status."""
+
+    _attr_icon = "mdi:speedometer"
+
+    def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
+        """Initialize the binary sensor."""
+        self._config_entry = config_entry
+        self._topic = TOPIC_P14A_ENWG_STATE.format(prefix=topic_prefix)
+        self._unsubscribe = None
+        self._attr_is_on = False
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to MQTT topic when added to Home Assistant."""
+
+        def message_received(msg) -> None:
+            try:
+                payload = msg.payload
+                if isinstance(payload, bytes):
+                    payload = payload.decode("utf-8")
+                data = json.loads(payload)
+                self._attr_is_on = bool(data.get("throttled", False))
+                self.async_write_ha_state()
+            except (
+                json.JSONDecodeError,
+                KeyError,
+                TypeError,
+                ValueError,
+            ) as err:
+                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
+
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from MQTT when removed."""
+        if self._unsubscribe:
+            self._unsubscribe()
+            self._unsubscribe = None
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID for this binary sensor."""
+        device_id = self._config_entry.data[CONF_DEVICE_ID]
+        return f"{DOMAIN}_{device_id}_p14a_enwg_throttled"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        device_id = self._config_entry.data[CONF_DEVICE_ID]
+        warp_version = self._config_entry.data[CONF_WARP_VERSION]
+        return DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=f"WARP Charger {device_id}",
+            manufacturer="Tinkerforge GmbH",
+            model=warp_version,
+        )
+
+
+class MabwarpP14aEnwgMaxPowerSensor(MabwarpMqttSensor):
+    """Sensor for P14A ENWG maximum allowed power."""
+
+    def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
+        """Initialize the sensor."""
+        super().__init__(
+            config_entry,
+            TOPIC_P14A_ENWG_STATE.format(prefix=topic_prefix),
+            "P14A ENWG Max Power",
+            "max_power",
+            "W",
+            SensorDeviceClass.POWER,
+            None,
+            coordinator=None,
+        )
 
 
 class MabwarpTemperatureSensor(MabwarpMqttSensor):

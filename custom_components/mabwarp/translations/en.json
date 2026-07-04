@@ -82,7 +82,9 @@
       "charge_limits_target_timestamp_ms": { "name": "Charge Limits Target Timestamp" },
       "charge_limits_start_energy_kwh": { "name": "Charge Limits Start Energy" },
       "charge_limits_target_energy_kwh": { "name": "Charge Limits Target Energy" },
-      "temperature_current": { "name": "Temperature Current" }
+      "temperature_current": { "name": "Temperature Current" },
+      "p14a_enwg_throttled": { "name": "P14A ENWG Throttled" },
+      "p14a_enwg_max_power": { "name": "P14A ENWG Max Power" }
     },
     "number": {
       "charging_current_limit": { "name": "Charging Current Limit" },
