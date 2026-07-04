@@ -4,7 +4,7 @@ import asyncio
 import datetime
 import json
 import logging
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.sensor import SensorDeviceClass
 
@@ -16,6 +16,7 @@ from custom_components.mabwarp.const import (
     DEFAULT_TOPIC_PREFIX,
     DOMAIN,
     METER_VALUE_ID_VOLTAGE_L1,
+    TOPIC_CHARGE_LIMITS_STATE,
     TOPIC_CHARGE_TRACKER_CURRENT,
     TOPIC_CHARGE_TRACKER_LAST,
     TOPIC_CHARGE_TRACKER_STATE,
@@ -23,15 +24,14 @@ from custom_components.mabwarp.const import (
     TOPIC_INFO_VERSION,
     TOPIC_METER_VALUES,
     TOPIC_NFC_LAST_TAG,
+    TOPIC_P14A_ENWG_STATE,
     TOPIC_POWER_MANAGER_CHARGE_MODE,
     TOPIC_POWER_MANAGER_LOW_LEVEL_STATE,
     TOPIC_POWER_MANAGER_STATE,
     TOPIC_SOLAR_FORECAST_PLANES_CONFIG,
     TOPIC_SOLAR_FORECAST_PLANES_STATE,
     TOPIC_SOLAR_FORECAST_STATE,
-    TOPIC_CHARGE_LIMITS_STATE,
     TOPIC_TEMPERATURES_STATE,
-    TOPIC_P14A_ENWG_STATE,
 )
 from custom_components.mabwarp.sensor import (
     MabwarpChargeLimitsEnergySensor,
@@ -50,6 +50,14 @@ from custom_components.mabwarp.sensor import (
     MabwarpTemperatureSensor,
     async_setup_entry,
 )
+
+
+def _make_mock_hass():
+    """Create a mock hass object with async_create_task support."""
+    hass = MagicMock()
+    create_task_mock = MagicMock(side_effect=lambda coro: asyncio.get_event_loop().create_task(coro))
+    hass.async_create_task = create_task_mock
+    return hass
 
 
 class FakeCoordinator:
@@ -311,7 +319,7 @@ def test_meter_sensors_skipped_without_meters_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     for entity in added:
         topic = entity._topic
@@ -327,7 +335,7 @@ def test_meter_sensors_created_with_empty_features_fallback():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     meter_topics = [e._topic for e in added if TOPIC_METER_VALUES.format(prefix=DEFAULT_TOPIC_PREFIX) in e._topic]
     assert len(meter_topics) > 0
@@ -342,7 +350,7 @@ def test_nfc_sensors_skipped_without_nfc_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     for entity in added:
         topic = entity._topic
@@ -494,7 +502,7 @@ def test_charge_tracker_sensors_skipped_without_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     for entity in added:
         topic = entity._topic
@@ -512,7 +520,7 @@ def test_power_manager_sensors_skipped_without_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     for entity in added:
         topic = entity._topic
@@ -530,7 +538,7 @@ def test_power_manager_sensors_created_with_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     power_manager_topics = [
         TOPIC_POWER_MANAGER_CHARGE_MODE.format(prefix=DEFAULT_TOPIC_PREFIX),
@@ -698,7 +706,7 @@ def test_solar_forecast_sensors_skipped_without_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     for entity in added:
         topic = entity._topic
@@ -714,7 +722,7 @@ def test_solar_forecast_sensors_created_with_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     solar_topics = [TOPIC_SOLAR_FORECAST_STATE.format(prefix=DEFAULT_TOPIC_PREFIX)]
     for topic in solar_topics:
@@ -778,7 +786,7 @@ def test_charge_limits_sensors_skipped_without_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     for entity in added:
         topic = entity._topic
@@ -794,7 +802,7 @@ def test_charge_limits_sensors_created_with_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     charge_limits_topics = [TOPIC_CHARGE_LIMITS_STATE.format(prefix=DEFAULT_TOPIC_PREFIX)]
     for topic in charge_limits_topics:
@@ -843,7 +851,7 @@ def test_temperature_sensors_skipped_without_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     for entity in added:
         topic = entity._topic
@@ -859,7 +867,7 @@ def test_temperature_sensors_created_with_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     temp_topics = [TOPIC_TEMPERATURES_STATE.format(prefix=DEFAULT_TOPIC_PREFIX)]
     for topic in temp_topics:
@@ -883,7 +891,7 @@ def test_p14a_enwg_sensors_skipped_without_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     for entity in added:
         topic = entity._topic
@@ -899,7 +907,7 @@ def test_p14a_enwg_sensors_created_with_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
 
     p14a_topics = [TOPIC_P14A_ENWG_STATE.format(prefix=DEFAULT_TOPIC_PREFIX)]
     for topic in p14a_topics:
@@ -931,3 +939,44 @@ def test_p14a_enwg_max_power_sensor_parses_max_power():
     entry = _make_mock_entry(features=["p14a_enwg"])
     sensor = MabwarpP14aEnwgMaxPowerSensor(entry, DEFAULT_TOPIC_PREFIX)
     assert sensor.extract_field({"max_power": 4200}) == 4200
+
+
+def test_solar_forecast_discovery_creates_background_task():
+    """Test solar_forecast discovery creates async background task."""
+    entry = _make_mock_entry(features=["solar_forecast"])
+    added = []
+
+    def async_add_entities(entities):
+        added.extend(entities)
+
+    hass = _make_mock_hass()
+    with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(hass, entry, async_add_entities))
+
+    assert hass.async_create_task.call_count == 1
+    discovered_coro = hass.async_create_task.call_args[0][0]
+    assert _is_coroutine(discovered_coro)
+    assert "discover_solar_planes" in discovered_coro.__name__
+
+
+def test_temperature_discovery_creates_background_task():
+    """Test temperature discovery creates async background task."""
+    entry = _make_mock_entry(features=["temperatures"])
+    added = []
+
+    def async_add_entities(entities):
+        added.extend(entities)
+
+    hass = _make_mock_hass()
+    with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(hass, entry, async_add_entities))
+
+    assert hass.async_create_task.call_count == 1
+    discovered_coro = hass.async_create_task.call_args[0][0]
+    assert _is_coroutine(discovered_coro)
+    assert "discover_temperature_keys" in discovered_coro.__name__
+
+
+def _is_coroutine(obj):
+    """Check if object is a coroutine function."""
+    return asyncio.iscoroutinefunction(obj) or asyncio.iscoroutine(obj)
