@@ -236,22 +236,21 @@ async def async_setup_entry(
                     SensorDeviceClass.VOLTAGE,
                     None,
                     coordinator,
-            ),
-
-            # allocated_current is delivered in mA (verified via firmware source
-            # code and documented charge_manager/available_current unit).
-            # conversion_factor=0.001 converts it to A for Home Assistant.
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_CHARGE_MANAGER.format(prefix=topic_prefix),
-                "Allocated Current",
-                "allocated_current",
-                "A",
-                SensorDeviceClass.CURRENT,
-                None,
-                coordinator,
-                0.001,
-            ),
+                ),
+                # allocated_current is delivered in mA (verified via firmware source
+                # code and documented charge_manager/available_current unit).
+                # conversion_factor=0.001 converts it to A for Home Assistant.
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_CHARGE_MANAGER.format(prefix=topic_prefix),
+                    "Allocated Current",
+                    "allocated_current",
+                    "A",
+                    SensorDeviceClass.CURRENT,
+                    None,
+                    coordinator,
+                    0.001,
+                ),
                 MabwarpMqttSensor(
                     entry,
                     TOPIC_METER_VALUES.format(prefix=topic_prefix),

@@ -193,9 +193,7 @@ def test_options_flow_redetects_features_and_reloads():
         return lambda: None
 
     with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
-        result = asyncio.get_event_loop().run_until_complete(
-            handler.async_step_init({"dummy": True})
-        )
+        result = asyncio.get_event_loop().run_until_complete(handler.async_step_init({"dummy": True}))
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert entry.data[CONF_FEATURES] == ["evse", "meters", "nfc"]

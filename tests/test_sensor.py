@@ -96,7 +96,7 @@ def test_sensor_device_info():
     assert (DOMAIN, "TEST01") in device_info["identifiers"]
 
 
-def testextract_field_simple():
+def test_extract_field_simple():
     """Test simple field extraction."""
     mock_config_entry = type(
         "MockEntry",
@@ -123,7 +123,7 @@ def testextract_field_simple():
     assert result == 1500.0
 
 
-def testextract_field_meter_array_with_mapping():
+def test_extract_field_meter_array_with_mapping():
     """Test meter array extraction using value_ids mapping."""
     mock_config_entry = type(
         "MockEntry",
@@ -153,7 +153,7 @@ def testextract_field_meter_array_with_mapping():
     assert result == 230.0
 
 
-def testextract_field_meter_array_when_mapping_missing():
+def test_extract_field_meter_array_when_mapping_missing():
     """Test meter array returns unknown when value_ids not received."""
     mock_config_entry = type(
         "MockEntry",
@@ -182,7 +182,7 @@ def testextract_field_meter_array_when_mapping_missing():
     assert result == "unknown"
 
 
-def testextract_field_meter_array_changed_order():
+def test_extract_field_meter_array_changed_order():
     """Test meter array extraction when value_ids order changes."""
     mock_config_entry = type(
         "MockEntry",
