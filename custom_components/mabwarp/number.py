@@ -35,10 +35,12 @@ async def async_setup_entry(
     entities = [MabwarpChargingCurrentNumber(entry)]
     features = entry.data.get("features", [])
     if "charge_limits" in features:
-        entities.extend([
-            MabwarpChargeLimitsDurationNumber(entry),
-            MabwarpChargeLimitsEnergyNumber(entry),
-        ])
+        entities.extend(
+            [
+                MabwarpChargeLimitsDurationNumber(entry),
+                MabwarpChargeLimitsEnergyNumber(entry),
+            ]
+        )
     async_add_entities(entities)
 
 

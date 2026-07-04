@@ -7,9 +7,9 @@ from custom_components.mabwarp.const import (
     DEFAULT_TOPIC_PREFIX,
 )
 from custom_components.mabwarp.number import (
-    MabwarpChargingCurrentNumber,
     MabwarpChargeLimitsDurationNumber,
     MabwarpChargeLimitsEnergyNumber,
+    MabwarpChargingCurrentNumber,
 )
 
 

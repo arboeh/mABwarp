@@ -84,11 +84,7 @@ class MeterValueCoordinator:
         return self._value_ids_mapping.get(meter_value_id)
 
     def store_values(self, values: list) -> None:
-        self._values_data = {
-            str(vid): val
-            for vid, val in enumerate(values)
-            if str(vid) in self._value_ids_mapping
-        }
+        self._values_data = {str(vid): val for vid, val in enumerate(values) if str(vid) in self._value_ids_mapping}
 
 
 async def async_setup_entry(
@@ -103,9 +99,7 @@ async def async_setup_entry(
     has_meters = "meters" in features or not features
     if "meter" in features and "meters" not in features:
         has_meters = False
-        _LOGGER.warning(
-            "Charger uses deprecated meter API, modern meters sensors skipped"
-        )
+        _LOGGER.warning("Charger uses deprecated meter API, modern meters sensors skipped")
     has_nfc = "nfc" in features or not features
     has_charge_tracker = "charge_tracker" in features or not features
 
@@ -565,9 +559,7 @@ async def async_setup_entry(
 
                     unsub2 = await async_subscribe(
                         hass,
-                        TOPIC_SOLAR_FORECAST_PLANES_STATE.format(
-                            prefix=topic_prefix, idx=idx
-                        ),
+                        TOPIC_SOLAR_FORECAST_PLANES_STATE.format(prefix=topic_prefix, idx=idx),
                         _make_callback(fut, idx),
                         0,
                     )
@@ -632,11 +624,7 @@ async def async_setup_entry(
     has_temperatures = "temperatures" in features
     if has_temperatures:
         temp_topic = TOPIC_TEMPERATURES_STATE.format(prefix=topic_prefix)
-        entities.append(
-            MabwarpTemperatureSensor(
-                entry, topic_prefix, "Temperature Current", "current"
-            )
-        )
+        entities.append(MabwarpTemperatureSensor(entry, topic_prefix, "Temperature Current", "current"))
 
         async def _discover_temperature_keys():
             future = asyncio.get_event_loop().create_future()
@@ -670,9 +658,7 @@ async def async_setup_entry(
                 for key in new_keys:
                     discovered_keys.add(key)
                     temp_entities.append(
-                        MabwarpTemperatureSensor(
-                            entry, topic_prefix, f"Temperature {key.title()}", key
-                        )
+                        MabwarpTemperatureSensor(entry, topic_prefix, f"Temperature {key.title()}", key)
                     )
                 if temp_entities:
                     async_add_entities(temp_entities)
@@ -810,9 +796,7 @@ class MabwarpMqttSensor(SensorEntity):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
                 value = self.extract_field(data)
-                if self._conversion_factor is not None and isinstance(
-                    value, int | float
-                ):
+                if self._conversion_factor is not None and isinstance(value, int | float):
                     value = value * self._conversion_factor
                 self._attr_native_value = value
                 self.async_write_ha_state()
@@ -823,13 +807,9 @@ class MabwarpMqttSensor(SensorEntity):
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning(
-                    "Failed to parse MQTT message on %s: %s", self._topic, err
-                )
+                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
 
-        self._unsubscribe = await async_subscribe(
-            self.hass, self._topic, message_received, 0
-        )
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""
@@ -917,9 +897,7 @@ class MabwarpFeaturesSensor(SensorEntity):
             ) as err:
                 _LOGGER.warning("Failed to parse features message: %s", err)
 
-        self._unsubscribe = await async_subscribe(
-            self.hass, self._topic, message_received, 0
-        )
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""
@@ -1015,9 +993,7 @@ class MabwarpLastChargeSensor(SensorEntity):
             ) as err:
                 _LOGGER.warning("Failed to parse last_charges message: %s", err)
 
-        self._unsubscribe = await async_subscribe(
-            self.hass, self._topic, message_received, 0
-        )
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""
@@ -1068,9 +1044,7 @@ class MabwarpChargeModeSensor(SensorEntity):
                 data = json.loads(payload)
                 mode = data.get("mode")
                 if mode is not None:
-                    self._attr_native_value = CHARGE_MODE_MAP.get(
-                        int(mode), f"Unknown ({mode})"
-                    )
+                    self._attr_native_value = CHARGE_MODE_MAP.get(int(mode), f"Unknown ({mode})")
                     self._attr_extra_state_attributes = {"mode": int(mode)}
                 self.async_write_ha_state()
             except (
@@ -1079,13 +1053,9 @@ class MabwarpChargeModeSensor(SensorEntity):
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning(
-                    "Failed to parse MQTT message on %s: %s", self._topic, err
-                )
+                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
 
-        self._unsubscribe = await async_subscribe(
-            self.hass, self._topic, message_received, 0
-        )
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""
@@ -1148,13 +1118,9 @@ class MabwarpConfigErrorFlagsSensor(SensorEntity):
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning(
-                    "Failed to parse MQTT message on %s: %s", self._topic, err
-                )
+                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
 
-        self._unsubscribe = await async_subscribe(
-            self.hass, self._topic, message_received, 0
-        )
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""
@@ -1166,9 +1132,7 @@ class MabwarpConfigErrorFlagsSensor(SensorEntity):
     def unique_id(self) -> str:
         """Return unique ID for this sensor."""
         device_id = self._config_entry.data[CONF_DEVICE_ID]
-        return (
-            f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_config_error_flags"
-        )
+        return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_config_error_flags"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -1186,9 +1150,7 @@ class MabwarpConfigErrorFlagsSensor(SensorEntity):
 class MabwarpSolarForecastValueSensor(MabwarpMqttSensor):
     """Sensor for solar forecast values with -1 => None mapping."""
 
-    def __init__(
-        self, config_entry: ConfigEntry, topic_prefix: str, field_name: str
-    ) -> None:
+    def __init__(self, config_entry: ConfigEntry, topic_prefix: str, field_name: str) -> None:
         """Initialize the sensor."""
         super().__init__(
             config_entry,
@@ -1209,15 +1171,11 @@ class MabwarpSolarForecastValueSensor(MabwarpMqttSensor):
 class MabwarpSolarPlaneStateSensor(MabwarpMqttSensor):
     """Sensor for a single solar plane's state (place)."""
 
-    def __init__(
-        self, config_entry: ConfigEntry, topic_prefix: str, plane_idx: int
-    ) -> None:
+    def __init__(self, config_entry: ConfigEntry, topic_prefix: str, plane_idx: int) -> None:
         """Initialize the sensor."""
         super().__init__(
             config_entry,
-            TOPIC_SOLAR_FORECAST_PLANES_STATE.format(
-                prefix=topic_prefix, idx=plane_idx
-            ),
+            TOPIC_SOLAR_FORECAST_PLANES_STATE.format(prefix=topic_prefix, idx=plane_idx),
             f"Solar Plane {plane_idx} Place",
             "place",
             None,
@@ -1233,14 +1191,10 @@ class MabwarpSolarPlaneConfigSensor(SensorEntity):
     _attr_native_value = None
     _attr_extra_state_attributes: dict[str, Any] = {}
 
-    def __init__(
-        self, config_entry: ConfigEntry, topic_prefix: str, plane_idx: int
-    ) -> None:
+    def __init__(self, config_entry: ConfigEntry, topic_prefix: str, plane_idx: int) -> None:
         """Initialize the sensor."""
         self._config_entry = config_entry
-        self._topic = TOPIC_SOLAR_FORECAST_PLANES_CONFIG.format(
-            prefix=topic_prefix, idx=plane_idx
-        )
+        self._topic = TOPIC_SOLAR_FORECAST_PLANES_CONFIG.format(prefix=topic_prefix, idx=plane_idx)
         self._unsubscribe = None
         self._plane_idx = plane_idx
 
@@ -1265,13 +1219,9 @@ class MabwarpSolarPlaneConfigSensor(SensorEntity):
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning(
-                    "Failed to parse MQTT message on %s: %s", self._topic, err
-                )
+                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
 
-        self._unsubscribe = await async_subscribe(
-            self.hass, self._topic, message_received, 0
-        )
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""
@@ -1304,9 +1254,7 @@ class MabwarpChargeLimitsTimestampSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_native_value = None
 
-    def __init__(
-        self, config_entry: ConfigEntry, topic_prefix: str, name: str, field_name: str
-    ) -> None:
+    def __init__(self, config_entry: ConfigEntry, topic_prefix: str, name: str, field_name: str) -> None:
         """Initialize the sensor."""
         self._config_entry = config_entry
         self._topic = TOPIC_CHARGE_LIMITS_STATE.format(prefix=topic_prefix)
@@ -1325,9 +1273,7 @@ class MabwarpChargeLimitsTimestampSensor(SensorEntity):
                 data = json.loads(payload)
                 value = data.get(self._field_name)
                 if value is not None:
-                    self._attr_native_value = datetime.datetime.fromtimestamp(
-                        int(value) / 1000, tz=datetime.UTC
-                    )
+                    self._attr_native_value = datetime.datetime.fromtimestamp(int(value) / 1000, tz=datetime.UTC)
                 else:
                     self._attr_native_value = None
                 self.async_write_ha_state()
@@ -1337,13 +1283,9 @@ class MabwarpChargeLimitsTimestampSensor(SensorEntity):
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning(
-                    "Failed to parse MQTT message on %s: %s", self._topic, err
-                )
+                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
 
-        self._unsubscribe = await async_subscribe(
-            self.hass, self._topic, message_received, 0
-        )
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""
@@ -1428,13 +1370,9 @@ class MabwarpP14aEnwgThrottledBinarySensor(BinarySensorEntity):
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning(
-                    "Failed to parse MQTT message on %s: %s", self._topic, err
-                )
+                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
 
-        self._unsubscribe = await async_subscribe(
-            self.hass, self._topic, message_received, 0
-        )
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from MQTT when removed."""
@@ -1481,9 +1419,7 @@ class MabwarpP14aEnwgMaxPowerSensor(MabwarpMqttSensor):
 class MabwarpTemperatureSensor(MabwarpMqttSensor):
     """Sensor for temperature values."""
 
-    def __init__(
-        self, config_entry: ConfigEntry, topic_prefix: str, name: str, field_name: str
-    ) -> None:
+    def __init__(self, config_entry: ConfigEntry, topic_prefix: str, name: str, field_name: str) -> None:
         """Initialize the sensor."""
         super().__init__(
             config_entry,

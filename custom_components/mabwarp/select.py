@@ -12,6 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+# ASSUMPTION: CHARGE_MODE_MAP values are assumed based on typical WARP web UI
+# mappings (0=Standby, 1=Min, 2=PV, 3=Min+PV). Not yet verified against real
+# hardware or official documentation. See const.py for the definition.
 from .const import (
     CHARGE_MODE_MAP,
     CONF_DEVICE_ID,

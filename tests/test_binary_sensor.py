@@ -52,6 +52,7 @@ def test_is_3phase_binary_sensor_on_when_true():
         sensor.async_write_ha_state()
 
     from unittest.mock import MagicMock
+
     msg = MagicMock()
     msg.payload = b'{"is_3phase": true}'
     message_received(msg)
@@ -83,6 +84,7 @@ def test_is_3phase_binary_sensor_off_when_false():
         sensor.async_write_ha_state()
 
     from unittest.mock import MagicMock
+
     msg = MagicMock()
     msg.payload = b'{"is_3phase": false}'
     message_received(msg)

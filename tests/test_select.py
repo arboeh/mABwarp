@@ -1,6 +1,5 @@
 # tests/test_select.py
 
-from custom_components.mabwarp.select import MabwarpChargeModeSelect
 from custom_components.mabwarp.const import (
     CONF_DEVICE_ID,
     CONF_TOPIC_PREFIX,
@@ -8,6 +7,7 @@ from custom_components.mabwarp.const import (
     DEFAULT_TOPIC_PREFIX,
     TOPIC_POWER_MANAGER_CHARGE_MODE,
 )
+from custom_components.mabwarp.select import MabwarpChargeModeSelect
 
 
 def test_charge_mode_select_unique_id():
@@ -68,9 +68,11 @@ def test_charge_mode_select_current_option_from_payload():
         mode = data.get("mode")
         if mode is not None:
             from custom_components.mabwarp.const import CHARGE_MODE_MAP
+
             select._attr_current_option = CHARGE_MODE_MAP.get(int(mode))
 
     from unittest.mock import MagicMock
+
     msg = MagicMock()
     msg.payload = b'{"mode": 2}'
     message_received(msg)
