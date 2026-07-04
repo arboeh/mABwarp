@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_DEVICE_ID,
+    CONF_FEATURES,
     CONF_TOPIC_PREFIX,
     CONF_WARP_VERSION,
     DOMAIN,
@@ -71,6 +72,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up mABwarp sensors."""
     topic_prefix = entry.data[CONF_TOPIC_PREFIX]
+
+    features = entry.data.get(CONF_FEATURES, [])
+    has_meters = "meters" in features or not features
+    if "meter" in features and "meters" not in features:
+        has_meters = False
+        _LOGGER.warning("Charger uses deprecated meter API, modern meters sensors skipped")
+    has_nfc = "nfc" in features or not features
 
     coordinator = MeterValueCoordinator(hass)
 
@@ -186,150 +194,152 @@ async def async_setup_entry(
     )
 
     # Meter values sensors
-    entities.extend(
-        [
-            # Voltage
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix),
-                "Voltage L1",
-                METER_VALUE_ID_VOLTAGE_L1,
-                "V",
-                SensorDeviceClass.VOLTAGE,
-                None,
-                coordinator,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix),
-                "Voltage L2",
-                METER_VALUE_ID_VOLTAGE_L2,
-                "V",
-                SensorDeviceClass.VOLTAGE,
-                None,
-                coordinator,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix),
-                "Voltage L3",
-                METER_VALUE_ID_VOLTAGE_L3,
-                "V",
-                SensorDeviceClass.VOLTAGE,
-                None,
-                coordinator,
-            ),
-            # Current
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix),
-                "Current L1",
-                METER_VALUE_ID_CURRENT_L1,
-                "A",
-                SensorDeviceClass.CURRENT,
-                None,
-                coordinator,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix),
-                "Current L2",
-                METER_VALUE_ID_CURRENT_L2,
-                "A",
-                SensorDeviceClass.CURRENT,
-                None,
-                coordinator,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix),
-                "Current L3",
-                METER_VALUE_ID_CURRENT_L3,
-                "A",
-                SensorDeviceClass.CURRENT,
-                None,
-                coordinator,
-            ),
-            # Power
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix),
-                "Power L1",
-                METER_VALUE_ID_POWER_L1,
-                "W",
-                SensorDeviceClass.POWER,
-                None,
-                coordinator,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix),
-                "Power L2",
-                METER_VALUE_ID_POWER_L2,
-                "W",
-                SensorDeviceClass.POWER,
-                None,
-                coordinator,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix),
-                "Power L3",
-                METER_VALUE_ID_POWER_L3,
-                "W",
-                SensorDeviceClass.POWER,
-                None,
-                coordinator,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix),
-                "Power",
-                METER_VALUE_ID_POWER_TOTAL,
-                "W",
-                SensorDeviceClass.POWER,
-                None,
-                coordinator,
-            ),
-            # Energy
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_METER_VALUES.format(prefix=topic_prefix),
-                "Energy (total)",
-                METER_VALUE_ID_ENERGY_TOTAL,
-                "kWh",
-                SensorDeviceClass.ENERGY,
-                SensorStateClass.TOTAL_INCREASING,
-                coordinator,
-            ),
-        ]
-    )
+    if has_meters:
+        entities.extend(
+            [
+                # Voltage
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                    "Voltage L1",
+                    METER_VALUE_ID_VOLTAGE_L1,
+                    "V",
+                    SensorDeviceClass.VOLTAGE,
+                    None,
+                    coordinator,
+                ),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                    "Voltage L2",
+                    METER_VALUE_ID_VOLTAGE_L2,
+                    "V",
+                    SensorDeviceClass.VOLTAGE,
+                    None,
+                    coordinator,
+                ),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                    "Voltage L3",
+                    METER_VALUE_ID_VOLTAGE_L3,
+                    "V",
+                    SensorDeviceClass.VOLTAGE,
+                    None,
+                    coordinator,
+                ),
+                # Current
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                    "Current L1",
+                    METER_VALUE_ID_CURRENT_L1,
+                    "A",
+                    SensorDeviceClass.CURRENT,
+                    None,
+                    coordinator,
+                ),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                    "Current L2",
+                    METER_VALUE_ID_CURRENT_L2,
+                    "A",
+                    SensorDeviceClass.CURRENT,
+                    None,
+                    coordinator,
+                ),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                    "Current L3",
+                    METER_VALUE_ID_CURRENT_L3,
+                    "A",
+                    SensorDeviceClass.CURRENT,
+                    None,
+                    coordinator,
+                ),
+                # Power
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                    "Power L1",
+                    METER_VALUE_ID_POWER_L1,
+                    "W",
+                    SensorDeviceClass.POWER,
+                    None,
+                    coordinator,
+                ),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                    "Power L2",
+                    METER_VALUE_ID_POWER_L2,
+                    "W",
+                    SensorDeviceClass.POWER,
+                    None,
+                    coordinator,
+                ),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                    "Power L3",
+                    METER_VALUE_ID_POWER_L3,
+                    "W",
+                    SensorDeviceClass.POWER,
+                    None,
+                    coordinator,
+                ),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                    "Power",
+                    METER_VALUE_ID_POWER_TOTAL,
+                    "W",
+                    SensorDeviceClass.POWER,
+                    None,
+                    coordinator,
+                ),
+                # Energy
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                    "Energy (total)",
+                    METER_VALUE_ID_ENERGY_TOTAL,
+                    "kWh",
+                    SensorDeviceClass.ENERGY,
+                    SensorStateClass.TOTAL_INCREASING,
+                    coordinator,
+                ),
+            ]
+        )
 
     # NFC last seen sensors
-    entities.extend(
-        [
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_NFC_LAST_TAG.format(prefix=topic_prefix),
-                "NFC Last Tag",
-                "tag_id",
-                None,
-                None,
-                None,
-                coordinator,
-            ),
-            MabwarpMqttSensor(
-                entry,
-                TOPIC_NFC_LAST_TAG.format(prefix=topic_prefix),
-                "NFC Last Seen",
-                "last_seen",
-                None,
-                SensorDeviceClass.TIMESTAMP,
-                None,
-                coordinator,
-            ),
-        ]
-    )
+    if has_nfc:
+        entities.extend(
+            [
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_NFC_LAST_TAG.format(prefix=topic_prefix),
+                    "NFC Last Tag",
+                    "tag_id",
+                    None,
+                    None,
+                    None,
+                    coordinator,
+                ),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_NFC_LAST_TAG.format(prefix=topic_prefix),
+                    "NFC Last Seen",
+                    "last_seen",
+                    None,
+                    SensorDeviceClass.TIMESTAMP,
+                    None,
+                    coordinator,
+                ),
+            ]
+        )
 
     # Charge manager state sensors
     entities.extend(
