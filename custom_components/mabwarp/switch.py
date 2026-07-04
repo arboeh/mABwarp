@@ -60,7 +60,7 @@ class MabwarpUserEnabledSwitch(SwitchEntity):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
                 self._attr_is_on = data["enabled"]
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
                 _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._subscribe_topic, err)
 

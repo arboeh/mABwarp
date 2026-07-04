@@ -71,7 +71,7 @@ class MabwarpChargingCurrentNumber(NumberEntity):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
                 self._attr_native_value = float(data["current"]) / 1000
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
                 _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
 
@@ -147,7 +147,7 @@ class MabwarpChargeLimitsDurationNumber(NumberEntity):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
                 self._attr_native_value = float(data.get("duration", 0))
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
                 _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
 
@@ -223,7 +223,7 @@ class MabwarpChargeLimitsEnergyNumber(NumberEntity):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
                 self._attr_native_value = float(data.get("energy_wh", 0))
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
                 _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
 

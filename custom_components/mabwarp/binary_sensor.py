@@ -55,7 +55,7 @@ class MabwarpIs3phaseBinarySensor(BinarySensorEntity):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
                 self._attr_is_on = bool(data.get("is_3phase", False))
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (
                 json.JSONDecodeError,
                 KeyError,
