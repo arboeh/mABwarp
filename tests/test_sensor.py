@@ -313,3 +313,29 @@ def test_nfc_sensors_skipped_without_nfc_feature():
     for entity in added:
         topic = entity._topic
         assert TOPIC_NFC_LAST_TAG.format(prefix=DEFAULT_TOPIC_PREFIX) not in topic
+
+
+def test_features_sensor_counts_and_attributes():
+    """Test features sensor reports correct count and attributes from entry data."""
+    entry = _make_mock_entry(features=["evse", "nfc", "meters"])
+    sensor = MabwarpFeaturesSensor(entry, DEFAULT_TOPIC_PREFIX)
+    assert sensor._attr_native_value == 3
+    assert sensor._attr_extra_state_attributes["features"] == ["evse", "nfc", "meters"]
+
+
+def test_firmware_version_sensor_parses_correctly():
+    """Test firmware version sensor extracts firmware field."""
+    mock_config_entry = _make_mock_entry()
+    sensor = MabwarpMqttSensor(
+        mock_config_entry,
+        TOPIC_INFO_VERSION.format(prefix=DEFAULT_TOPIC_PREFIX),
+        "Firmware Version",
+        "firmware",
+        None,
+        None,
+        None,
+        coordinator=None,
+    )
+    payload = {"firmware": "1.2.3", "config": "abc", "config_type": "release"}
+    result = sensor._extract_field(payload)
+    assert result == "1.2.3"

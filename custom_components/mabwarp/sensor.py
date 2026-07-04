@@ -37,6 +37,10 @@ from .const import (
     TOPIC_CHARGE_MANAGER,
     TOPIC_EVSE_LOW_LEVEL,
     TOPIC_EVSE_STATE,
+    TOPIC_INFO_DISPLAY_NAME,
+    TOPIC_INFO_FEATURES,
+    TOPIC_INFO_NAME,
+    TOPIC_INFO_VERSION,
     TOPIC_METER_VALUE_IDS,
     TOPIC_METER_VALUES,
     TOPIC_NFC_LAST_TAG,
@@ -341,6 +345,42 @@ async def async_setup_entry(
             ]
         )
 
+    # Info sensors
+    entities.extend(
+        [
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_INFO_VERSION.format(prefix=topic_prefix),
+                "Firmware Version",
+                "firmware",
+                None,
+                None,
+                None,
+                coordinator=None,
+            ),
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_INFO_NAME.format(prefix=topic_prefix),
+                "Display Type",
+                "display_type",
+                None,
+                None,
+                None,
+                coordinator=None,
+            ),
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_INFO_DISPLAY_NAME.format(prefix=topic_prefix),
+                "Display Name",
+                "display_name",
+                None,
+                None,
+                None,
+                coordinator=None,
+            ),
+        ]
+    )
+
     # Charge manager state sensors
     entities.extend(
         [
@@ -367,6 +407,9 @@ async def async_setup_entry(
             ),
         ]
     )
+
+    # Features sensor
+    entities.append(MabwarpFeaturesSensor(entry, topic_prefix))
 
     async_add_entities(entities)
 
@@ -500,6 +543,73 @@ class MabwarpMqttSensor(SensorEntity):
         device_id = self._config_entry.data[CONF_DEVICE_ID]
         safe_path = self._field_path.replace(".", "_")
         return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_{safe_path}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        device_id = self._config_entry.data[CONF_DEVICE_ID]
+        warp_version = self._config_entry.data[CONF_WARP_VERSION]
+        return DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=f"WARP Charger {device_id}",
+            manufacturer="Tinkerforge GmbH",
+            model=warp_version,
+        )
+
+
+class MabwarpFeaturesSensor(SensorEntity):
+    """Sensor that reports the number of detected features."""
+
+    _attr_icon = "mdi:format-list-checks"
+    _attr_native_value = 0
+    _attr_extra_state_attributes: dict[str, Any] = {}
+
+    def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
+        """Initialize the features sensor."""
+        self._config_entry = config_entry
+        self._topic = TOPIC_INFO_FEATURES.format(prefix=topic_prefix)
+        self._unsubscribe = None
+
+        features = config_entry.data.get(CONF_FEATURES, [])
+        self._attr_native_value = len(features)
+        self._attr_extra_state_attributes = {"features": features}
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to MQTT topic when added to Home Assistant."""
+
+        def message_received(msg) -> None:
+            try:
+                payload = msg.payload
+                if isinstance(payload, bytes):
+                    payload = payload.decode("utf-8")
+                data = json.loads(payload)
+                if isinstance(data, list):
+                    self._attr_native_value = len(data)
+                    self._attr_extra_state_attributes = {"features": data}
+                else:
+                    self._attr_native_value = 0
+                    self._attr_extra_state_attributes = {"features": []}
+                self.async_write_ha_state()
+            except (
+                json.JSONDecodeError,
+                TypeError,
+                ValueError,
+            ) as err:
+                _LOGGER.warning("Failed to parse features message: %s", err)
+
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from MQTT when removed."""
+        if self._unsubscribe:
+            self._unsubscribe()
+            self._unsubscribe = None
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID for this sensor."""
+        device_id = self._config_entry.data[CONF_DEVICE_ID]
+        return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_features"
 
     @property
     def device_info(self) -> DeviceInfo:

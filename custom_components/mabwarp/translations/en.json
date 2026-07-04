@@ -52,7 +52,11 @@
       "nfc_last_tag": { "name": "NFC Last Tag" },
       "nfc_last_seen": { "name": "NFC Last Seen" },
       "charge_manager_state": { "name": "Charge Manager State" },
-      "allocated_current": { "name": "Allocated Current" }
+      "allocated_current": { "name": "Allocated Current" },
+      "firmware_version": { "name": "Firmware Version" },
+      "display_type": { "name": "Display Type" },
+      "display_name": { "name": "Display Name" },
+      "features": { "name": "Supported Features" }
     },
     "number": {
       "charging_current_limit": { "name": "Charging Current Limit" }

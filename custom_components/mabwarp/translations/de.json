@@ -52,7 +52,11 @@
       "nfc_last_tag": { "name": "Letzter NFC-Tag" },
       "nfc_last_seen": { "name": "NFC zuletzt gesehen" },
       "charge_manager_state": { "name": "Lastmanagement-Status" },
-      "allocated_current": { "name": "Zugewiesener Strom" }
+      "allocated_current": { "name": "Zugewiesener Strom" },
+      "firmware_version": { "name": "Firmware-Version" },
+      "display_type": { "name": "Gerätetyp" },
+      "display_name": { "name": "Anzeigename" },
+      "features": { "name": "Unterstützte Features" }
     },
     "number": {
       "charging_current_limit": { "name": "Ladestrom-Begrenzung" }
