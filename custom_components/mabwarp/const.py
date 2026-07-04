@@ -32,6 +32,30 @@ TOPIC_CHARGE_TRACKER_STATE = "{prefix}/charge_tracker/state"
 TOPIC_CHARGE_TRACKER_CURRENT = "{prefix}/charge_tracker/current_charge"
 TOPIC_CHARGE_TRACKER_LAST = "{prefix}/charge_tracker/last_charges"
 
+# Power Manager
+TOPIC_POWER_MANAGER_CHARGE_MODE = "{prefix}/power_manager/charge_mode"
+TOPIC_POWER_MANAGER_CHARGE_MODE_UPDATE = "{prefix}/power_manager/charge_mode_update"
+TOPIC_POWER_MANAGER_STATE = "{prefix}/power_manager/state"
+TOPIC_POWER_MANAGER_LOW_LEVEL_STATE = "{prefix}/power_manager/low_level_state"
+
+# Solar Forecast
+TOPIC_SOLAR_FORECAST_STATE = "{prefix}/solar_forecast/state"
+TOPIC_SOLAR_FORECAST_PLANES_LIST = "{prefix}/solar_forecast/planes"
+TOPIC_SOLAR_FORECAST_PLANES_STATE = "{prefix}/solar_forecast/planes/{idx}/state"
+TOPIC_SOLAR_FORECAST_PLANES_CONFIG = "{prefix}/solar_forecast/planes/{idx}/config"
+
+# Charge Limits
+TOPIC_CHARGE_LIMITS_STATE = "{prefix}/charge_limits/state"
+TOPIC_CHARGE_LIMITS_DEFAULT_LIMITS = "{prefix}/charge_limits/default_limits"
+TOPIC_CHARGE_LIMITS_DEFAULT_LIMITS_UPDATE = "{prefix}/charge_limits/default_limits_update"
+TOPIC_CHARGE_LIMITS_RESTART = "{prefix}/charge_limits/restart"
+
+# Temperatures
+TOPIC_TEMPERATURES_STATE = "{prefix}/temperatures/state"
+
+# P14A ENWG
+TOPIC_P14A_ENWG_STATE = "{prefix}/p14a_enwg/state"
+
 # Meter Value IDs from WARP3 value_ids list
 METER_VALUE_ID_VOLTAGE_L1 = "13"
 METER_VALUE_ID_VOLTAGE_L2 = "14"
@@ -44,4 +68,25 @@ METER_VALUE_ID_POWER_L2 = "20"
 METER_VALUE_ID_POWER_L3 = "21"
 METER_VALUE_ID_POWER_TOTAL = "30"
 METER_VALUE_ID_ENERGY_TOTAL = "40"
-TOPIC_EVSE_SET_USER_ENABLED = "{prefix}/evse/set_user_enabled"
+
+# Charge Mode mapping (ASSUMPTION - not yet verified against real hardware)
+# 0=Standby, 1=Min, 2=PV, 3=Min+PV analog zur WARP-Weboberfläche
+CHARGE_MODE_MAP = {
+    0: "Standby",
+    1: "Min",
+    2: "PV",
+    3: "Min+PV",
+}
+
+# Config Error Flag bit definitions (ASSUMPTION - verify against real payload)
+# Decoded as extra_state_attributes on the config_error_flags sensor
+CONFIG_ERROR_FLAG_BITS = [
+    "config_error_0",
+    "config_error_1",
+    "config_error_2",
+    "config_error_3",
+    "config_error_4",
+    "config_error_5",
+    "config_error_6",
+    "config_error_7",
+]

@@ -68,7 +68,13 @@
       "tracked_charges": { "name": "Erfasste Ladevorgänge" },
       "current_charge_meter_start": { "name": "Aktueller Ladevorgang Zählerstand" },
       "current_charge_user_id": { "name": "Aktueller Ladevorgang Benutzer-ID" },
-      "last_charge_energy": { "name": "Letzte Ladung Energie" }
+      "last_charge_energy": { "name": "Letzte Ladung Energie" },
+      "power_manager_charge_mode": { "name": "Power Manager Ladmodus" },
+      "power_manager_config_error_flags": { "name": "Power Manager Konfigurationsfehler" },
+      "power_manager_external_control": { "name": "Power Manager Externe Steuerung" },
+      "power_manager_power_at_meter": { "name": "Power Manager Leistung am Zähler" },
+      "power_manager_power_available": { "name": "Power Manager Verfügbare Leistung" },
+      "power_manager_charging_blocked": { "name": "Power Manager Laden blockiert" }
     },
     "number": {
       "charging_current_limit": { "name": "Ladestrom-Begrenzung" }
@@ -79,6 +85,12 @@
     "button": {
       "start_charging": { "name": "Ladevorgang starten" },
       "stop_charging": { "name": "Ladevorgang beenden" }
+    },
+    "binary_sensor": {
+      "power_manager_is_3phase": { "name": "Power Manager 3-Phasen" }
+    },
+    "select": {
+      "power_manager_charge_mode": { "name": "Power Manager Ladmodus" }
     }
   }
 }

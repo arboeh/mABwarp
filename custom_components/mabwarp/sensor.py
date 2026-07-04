@@ -19,6 +19,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    CHARGE_MODE_MAP,
+    CONFIG_ERROR_FLAG_BITS,
     CONF_DEVICE_ID,
     CONF_FEATURES,
     CONF_TOPIC_PREFIX,
@@ -48,6 +50,9 @@ from .const import (
     TOPIC_METER_VALUE_IDS,
     TOPIC_METER_VALUES,
     TOPIC_NFC_LAST_TAG,
+    TOPIC_POWER_MANAGER_CHARGE_MODE,
+    TOPIC_POWER_MANAGER_LOW_LEVEL_STATE,
+    TOPIC_POWER_MANAGER_STATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -421,6 +426,69 @@ async def async_setup_entry(
         ]
     )
 
+    # Power Manager sensors
+    has_power_manager = "power_manager" in features
+    if has_power_manager:
+        entities.extend(
+            [
+                # ASSUMPTION (not yet verified against real hardware):
+                # Charge mode mapping 0=Standby, 1=Min, 2=PV, 3=Min+PV
+                # is assumed analog to the WARP web interface.
+                # TODO: verify with real payload before first release.
+                MabwarpChargeModeSensor(entry, topic_prefix),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_POWER_MANAGER_STATE.format(prefix=topic_prefix),
+                    "Power Manager Config Error Flags",
+                    "config_error_flags",
+                    None,
+                    None,
+                    None,
+                    coordinator=None,
+                ),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_POWER_MANAGER_STATE.format(prefix=topic_prefix),
+                    "Power Manager External Control",
+                    "external_control",
+                    None,
+                    None,
+                    None,
+                    coordinator=None,
+                ),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_POWER_MANAGER_LOW_LEVEL_STATE.format(prefix=topic_prefix),
+                    "Power Manager Power At Meter",
+                    "power_at_meter",
+                    "W",
+                    SensorDeviceClass.POWER,
+                    None,
+                    coordinator=None,
+                ),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_POWER_MANAGER_LOW_LEVEL_STATE.format(prefix=topic_prefix),
+                    "Power Manager Power Available",
+                    "power_available",
+                    "W",
+                    SensorDeviceClass.POWER,
+                    None,
+                    coordinator=None,
+                ),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_POWER_MANAGER_LOW_LEVEL_STATE.format(prefix=topic_prefix),
+                    "Power Manager Charging Blocked",
+                    "charging_blocked",
+                    None,
+                    None,
+                    None,
+                    coordinator=None,
+                ),
+            ]
+        )
+
     # Features sensor
     entities.append(MabwarpFeaturesSensor(entry, topic_prefix))
 
@@ -748,6 +816,133 @@ class MabwarpLastChargeSensor(SensorEntity):
         """Return unique ID for this sensor."""
         device_id = self._config_entry.data[CONF_DEVICE_ID]
         return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_last_charge"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        device_id = self._config_entry.data[CONF_DEVICE_ID]
+        warp_version = self._config_entry.data[CONF_WARP_VERSION]
+        return DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=f"WARP Charger {device_id}",
+            manufacturer="Tinkerforge GmbH",
+            model=warp_version,
+        )
+
+
+class MabwarpChargeModeSensor(SensorEntity):
+    """Sensor for WARP Power Manager charge mode with text mapping."""
+
+    _attr_icon = "mdi:ev-station"
+    _attr_native_value = None
+    _attr_extra_state_attributes: dict[str, Any] = {}
+
+    def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
+        """Initialize the sensor."""
+        self._config_entry = config_entry
+        self._topic = TOPIC_POWER_MANAGER_CHARGE_MODE.format(prefix=topic_prefix)
+        self._unsubscribe = None
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to MQTT topic when added to Home Assistant."""
+
+        def message_received(msg) -> None:
+            try:
+                payload = msg.payload
+                if isinstance(payload, bytes):
+                    payload = payload.decode("utf-8")
+                data = json.loads(payload)
+                mode = data.get("mode")
+                if mode is not None:
+                    self._attr_native_value = CHARGE_MODE_MAP.get(int(mode), f"Unknown ({mode})")
+                    self._attr_extra_state_attributes = {"mode": int(mode)}
+                self.async_write_ha_state()
+            except (
+                json.JSONDecodeError,
+                KeyError,
+                TypeError,
+                ValueError,
+            ) as err:
+                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
+
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from MQTT when removed."""
+        if self._unsubscribe:
+            self._unsubscribe()
+            self._unsubscribe = None
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID for this sensor."""
+        device_id = self._config_entry.data[CONF_DEVICE_ID]
+        return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_charge_mode"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        device_id = self._config_entry.data[CONF_DEVICE_ID]
+        warp_version = self._config_entry.data[CONF_WARP_VERSION]
+        return DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=f"WARP Charger {device_id}",
+            manufacturer="Tinkerforge GmbH",
+            model=warp_version,
+        )
+
+
+class MabwarpConfigErrorFlagsSensor(SensorEntity):
+    """Sensor for WARP Power Manager config error flags with bit decoding."""
+
+    _attr_icon = "mdi:alert-circle"
+    _attr_native_value = None
+    _attr_extra_state_attributes: dict[str, Any] = {}
+
+    def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
+        """Initialize the sensor."""
+        self._config_entry = config_entry
+        self._topic = TOPIC_POWER_MANAGER_STATE.format(prefix=topic_prefix)
+        self._unsubscribe = None
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to MQTT topic when added to Home Assistant."""
+
+        def message_received(msg) -> None:
+            try:
+                payload = msg.payload
+                if isinstance(payload, bytes):
+                    payload = payload.decode("utf-8")
+                data = json.loads(payload)
+                flags = data.get("config_error_flags")
+                if flags is not None:
+                    self._attr_native_value = int(flags)
+                    decoded: dict[str, bool] = {}
+                    for idx, flag_name in enumerate(CONFIG_ERROR_FLAG_BITS):
+                        decoded[flag_name] = bool(int(flags) & (1 << idx))
+                    self._attr_extra_state_attributes = decoded
+                self.async_write_ha_state()
+            except (
+                json.JSONDecodeError,
+                KeyError,
+                TypeError,
+                ValueError,
+            ) as err:
+                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
+
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from MQTT when removed."""
+        if self._unsubscribe:
+            self._unsubscribe()
+            self._unsubscribe = None
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID for this sensor."""
+        device_id = self._config_entry.data[CONF_DEVICE_ID]
+        return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_config_error_flags"
 
     @property
     def device_info(self) -> DeviceInfo:

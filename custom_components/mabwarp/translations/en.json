@@ -68,7 +68,13 @@
       "tracked_charges": { "name": "Tracked Charges" },
       "current_charge_meter_start": { "name": "Current Charge Meter Start" },
       "current_charge_user_id": { "name": "Current Charge User ID" },
-      "last_charge_energy": { "name": "Last Charge Energy" }
+      "last_charge_energy": { "name": "Last Charge Energy" },
+      "power_manager_charge_mode": { "name": "Power Manager Charge Mode" },
+      "power_manager_config_error_flags": { "name": "Power Manager Config Error Flags" },
+      "power_manager_external_control": { "name": "Power Manager External Control" },
+      "power_manager_power_at_meter": { "name": "Power Manager Power At Meter" },
+      "power_manager_power_available": { "name": "Power Manager Power Available" },
+      "power_manager_charging_blocked": { "name": "Power Manager Charging Blocked" }
     },
     "number": {
       "charging_current_limit": { "name": "Charging Current Limit" }
@@ -79,6 +85,12 @@
     "button": {
       "start_charging": { "name": "Start Charging" },
       "stop_charging": { "name": "Stop Charging" }
+    },
+    "binary_sensor": {
+      "power_manager_is_3phase": { "name": "Power Manager 3-Phase" }
+    },
+    "select": {
+      "power_manager_charge_mode": { "name": "Power Manager Charge Mode" }
     }
   }
 }
