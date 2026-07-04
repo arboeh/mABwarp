@@ -1,6 +1,8 @@
 # custom_components/mabwarp/const.py
 
 DOMAIN = "mabwarp"
+CONF_FEATURES = "features"
+
 CONF_TOPIC_PREFIX = "topic_prefix"
 CONF_DEVICE_ID = "device_id"
 CONF_WARP_VERSION = "warp_version"
@@ -22,6 +24,7 @@ TOPIC_CHARGE_MANAGER = "{prefix}/charge_manager/state"
 TOPIC_NFC_LAST_TAG = "{prefix}/nfc/last_seen"
 TOPIC_EVSE_SET_USER_ENABLED = "{prefix}/evse/set_user_enabled"
 TOPIC_EVSE_USER_ENABLED = "{prefix}/evse/user_enabled"
+TOPIC_INFO_FEATURES = "{prefix}/info/features"
 
 # Meter Value IDs from WARP3 value_ids list
 METER_VALUE_ID_VOLTAGE_L1 = "13"

@@ -1,7 +1,7 @@
 # tests/test_config_flow.py
 
 import asyncio
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 class MockConfigEntry:
@@ -96,3 +96,49 @@ def test_duplicate_device_id_aborts():
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+def _mock_msg(payload_bytes):
+    """Create a mock MQTT message."""
+    msg = MagicMock()
+    msg.payload = payload_bytes
+    return msg
+
+
+def test_features_detected_and_stored():
+    """Test that detected features are stored in entry data."""
+    hass = _make_mock_hass(has_mqtt=True)
+    flow = MabwarpConfigFlow()
+    flow.hass = hass
+
+    callback_holder = {}
+
+    def mock_async_subscribe(hass, topic, callback, qos):
+        callback_holder["callback"] = callback
+        return lambda: None
+
+    with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
+        result = asyncio.get_event_loop().run_until_complete(
+            flow.async_step_user({"topic_prefix": "warp", "device_id": "TEST01", "warp_version": "WARP3"})
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"]["features"] == ["evse", "meters", "nfc"]
+
+
+def test_features_timeout_falls_back_to_empty_list():
+    """Test that feature timeout falls back to empty list and still creates entry."""
+    hass = _make_mock_hass(has_mqtt=True)
+    flow = MabwarpConfigFlow()
+    flow.hass = hass
+
+    def mock_async_subscribe(hass, topic, callback, qos):
+        return lambda: None
+
+    with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
+        result = asyncio.get_event_loop().run_until_complete(
+            flow.async_step_user({"topic_prefix": "warp", "device_id": "TEST01", "warp_version": "WARP3"})
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"]["features"] == []

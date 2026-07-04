@@ -24,6 +24,12 @@
       "mqtt_not_available": "MQTT integration is not available."
     }
   },
+  "issues": {
+    "features_not_detected": {
+      "title": "Feature detection failed",
+      "description": "Feature detection failed. All sensors will be set up anyway but may show as unavailable."
+    }
+  },
   "entity": {
     "sensor": {
       "iec61851_state": { "name": "IEC61851 State" },
