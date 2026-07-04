@@ -56,7 +56,11 @@
       "firmware_version": { "name": "Firmware-Version" },
       "display_type": { "name": "Gerätetyp" },
       "display_name": { "name": "Anzeigename" },
-      "features": { "name": "Unterstützte Features" }
+      "features": { "name": "Unterstützte Features" },
+      "tracked_charges": { "name": "Erfasste Ladevorgänge" },
+      "current_charge_meter_start": { "name": "Aktueller Ladevorgang Zählerstand" },
+      "current_charge_user_id": { "name": "Aktueller Ladevorgang Benutzer-ID" },
+      "last_charge_energy": { "name": "Letzte Ladung Energie" }
     },
     "number": {
       "charging_current_limit": { "name": "Ladestrom-Begrenzung" }

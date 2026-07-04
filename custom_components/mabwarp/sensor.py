@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime
 import json
 import logging
 from typing import Any
@@ -35,6 +36,9 @@ from .const import (
     METER_VALUE_ID_VOLTAGE_L2,
     METER_VALUE_ID_VOLTAGE_L3,
     TOPIC_CHARGE_MANAGER,
+    TOPIC_CHARGE_TRACKER_CURRENT,
+    TOPIC_CHARGE_TRACKER_LAST,
+    TOPIC_CHARGE_TRACKER_STATE,
     TOPIC_EVSE_LOW_LEVEL,
     TOPIC_EVSE_STATE,
     TOPIC_INFO_DISPLAY_NAME,
@@ -83,6 +87,7 @@ async def async_setup_entry(
         has_meters = False
         _LOGGER.warning("Charger uses deprecated meter API, modern meters sensors skipped")
     has_nfc = "nfc" in features or not features
+    has_charge_tracker = "charge_tracker" in features or not features
 
     coordinator = MeterValueCoordinator(hass)
 
@@ -411,6 +416,35 @@ async def async_setup_entry(
     # Features sensor
     entities.append(MabwarpFeaturesSensor(entry, topic_prefix))
 
+    # Charge tracker sensors
+    if has_charge_tracker:
+        entities.extend(
+            [
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_CHARGE_TRACKER_STATE.format(prefix=topic_prefix),
+                    "Tracked Charges",
+                    "tracked_charges",
+                    None,
+                    None,
+                    None,
+                    coordinator=None,
+                ),
+                MabwarpMqttSensor(
+                    entry,
+                    TOPIC_CHARGE_TRACKER_CURRENT.format(prefix=topic_prefix),
+                    "Current Charge Meter Start",
+                    "meter_start",
+                    "kWh",
+                    SensorDeviceClass.ENERGY,
+                    None,
+                    coordinator=None,
+                ),
+                MabwarpCurrentChargeUserIDSensor(entry, topic_prefix),
+                MabwarpLastChargeSensor(entry, topic_prefix),
+            ]
+        )
+
     async_add_entities(entities)
 
 
@@ -610,6 +644,110 @@ class MabwarpFeaturesSensor(SensorEntity):
         """Return unique ID for this sensor."""
         device_id = self._config_entry.data[CONF_DEVICE_ID]
         return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_features"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        device_id = self._config_entry.data[CONF_DEVICE_ID]
+        warp_version = self._config_entry.data[CONF_WARP_VERSION]
+        return DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            name=f"WARP Charger {device_id}",
+            manufacturer="Tinkerforge GmbH",
+            model=warp_version,
+        )
+
+
+class MabwarpCurrentChargeUserIDSensor(MabwarpMqttSensor):
+    """Sensor for current charge user ID with idle-state handling."""
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to MQTT topic when added to Home Assistant."""
+
+        def message_received(msg) -> None:
+            try:
+                payload = msg.payload
+                if isinstance(payload, bytes):
+                    payload = payload.decode("utf-8")
+                data = json.loads(payload)
+                value = self._extract_field(data)
+                if value == -1:
+                    value = None
+                self._attr_native_value = value
+                self.async_write_ha_state()
+            except (
+                json.JSONDecodeError,
+                KeyError,
+                IndexError,
+                TypeError,
+                ValueError,
+            ) as err:
+                _LOGGER.warning("Failed to parse current_charge message on %s: %s", self._topic, err)
+
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
+
+
+class MabwarpLastChargeSensor(SensorEntity):
+    """Sensor for the most recent entry in charge_tracker/last_charges."""
+
+    _attr_icon = "mdi:ev-station"
+    _attr_native_value = None
+    _attr_extra_state_attributes: dict[str, Any] = {}
+
+    def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
+        """Initialize the last charge sensor."""
+        self._config_entry = config_entry
+        self._topic = TOPIC_CHARGE_TRACKER_LAST.format(prefix=topic_prefix)
+        self._unsubscribe = None
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to MQTT topic when added to Home Assistant."""
+
+        def message_received(msg) -> None:
+            try:
+                payload = msg.payload
+                if isinstance(payload, bytes):
+                    payload = payload.decode("utf-8")
+                data = json.loads(payload)
+                if not isinstance(data, list) or len(data) == 0:
+                    self._attr_native_value = None
+                    self._attr_extra_state_attributes = {}
+                    _LOGGER.warning("Received empty last_charges array")
+                    self.async_write_ha_state()
+                    return
+                last = data[-1]
+                energy = last.get("energy_charged")
+                self._attr_native_value = energy
+                self._attr_extra_state_attributes = {
+                    "charge_duration": last.get("charge_duration"),
+                    "user_id": last.get("user_id"),
+                    "timestamp": datetime.datetime.fromtimestamp(
+                        last.get("timestamp_minutes", 0) * 60,
+                        tz=datetime.UTC,
+                    ).isoformat(),
+                }
+                self.async_write_ha_state()
+            except (
+                json.JSONDecodeError,
+                TypeError,
+                ValueError,
+                KeyError,
+            ) as err:
+                _LOGGER.warning("Failed to parse last_charges message: %s", err)
+
+        self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from MQTT when removed."""
+        if self._unsubscribe:
+            self._unsubscribe()
+            self._unsubscribe = None
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique ID for this sensor."""
+        device_id = self._config_entry.data[CONF_DEVICE_ID]
+        return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_last_charge"
 
     @property
     def device_info(self) -> DeviceInfo:

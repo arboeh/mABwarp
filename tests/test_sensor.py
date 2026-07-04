@@ -11,11 +11,20 @@ from custom_components.mabwarp.const import (
     DEFAULT_TOPIC_PREFIX,
     DOMAIN,
     METER_VALUE_ID_VOLTAGE_L1,
+    TOPIC_CHARGE_TRACKER_CURRENT,
+    TOPIC_CHARGE_TRACKER_LAST,
+    TOPIC_CHARGE_TRACKER_STATE,
     TOPIC_EVSE_STATE,
     TOPIC_METER_VALUES,
     TOPIC_NFC_LAST_TAG,
 )
-from custom_components.mabwarp.sensor import MabwarpMqttSensor, async_setup_entry
+from custom_components.mabwarp.sensor import (
+    MabwarpCurrentChargeUserIDSensor,
+    MabwarpFeaturesSensor,
+    MabwarpLastChargeSensor,
+    MabwarpMqttSensor,
+    async_setup_entry,
+)
 
 
 class FakeCoordinator:
@@ -339,3 +348,161 @@ def test_firmware_version_sensor_parses_correctly():
     payload = {"firmware": "1.2.3", "config": "abc", "config_type": "release"}
     result = sensor._extract_field(payload)
     assert result == "1.2.3"
+
+
+def test_current_charge_sensor_idle_when_no_session():
+    """Test current charge user ID sensor returns None when user_id is -1."""
+    entry = _make_mock_entry(features=["charge_tracker"])
+    sensor = MabwarpCurrentChargeUserIDSensor(
+        entry,
+        TOPIC_CHARGE_TRACKER_CURRENT.format(prefix=DEFAULT_TOPIC_PREFIX),
+        "Current Charge User ID",
+        "user_id",
+        None,
+        None,
+        None,
+        coordinator=None,
+    )
+    msg = MagicMock()
+    msg.payload = (
+        b'{"user_id": -1, "meter_start": 0.0, "evse_uptime_start": 0, '
+        b'"timestamp_minutes": 0, "authorization_type": 0}'
+    )
+    sensor._extract_field = MagicMock(return_value=-1)
+    sensor.async_write_ha_state = MagicMock()
+
+    def message_received(msg) -> None:
+        try:
+            payload = msg.payload
+            if isinstance(payload, bytes):
+                payload = payload.decode("utf-8")
+            data = json.loads(payload)
+            value = sensor._extract_field(data)
+            if value == -1:
+                value = None
+            sensor._attr_native_value = value
+            sensor.async_write_ha_state()
+        except (
+            json.JSONDecodeError,
+            KeyError,
+            IndexError,
+            TypeError,
+            ValueError,
+        ) as err:
+            _LOGGER.warning("Failed to parse current_charge message on %s: %s", sensor._topic, err)
+
+    message_received(msg)
+    assert sensor._attr_native_value is None
+
+
+def test_last_charge_sensor_uses_latest_entry():
+    """Test last charge sensor uses the latest entry from array."""
+    entry = _make_mock_entry(features=["charge_tracker"])
+    sensor = MabwarpLastChargeSensor(entry, DEFAULT_TOPIC_PREFIX)
+    payload = [
+        {"timestamp_minutes": 1000, "charge_duration": 30, "user_id": 1, "energy_charged": 12.5},
+        {"timestamp_minutes": 2000, "charge_duration": 60, "user_id": 2, "energy_charged": 24.0},
+        {"timestamp_minutes": 3000, "charge_duration": 45, "user_id": 3, "energy_charged": 18.3},
+    ]
+    msg = MagicMock()
+    msg.payload = json.dumps(payload).encode("utf-8")
+    sensor.async_write_ha_state = MagicMock()
+
+    def message_received(msg) -> None:
+        try:
+            payload_data = msg.payload
+            if isinstance(payload_data, bytes):
+                payload_data = payload_data.decode("utf-8")
+            data = json.loads(payload_data)
+            if not isinstance(data, list) or len(data) == 0:
+                sensor._attr_native_value = None
+                sensor._attr_extra_state_attributes = {}
+                _LOGGER.warning("Received empty last_charges array")
+                sensor.async_write_ha_state()
+                return
+            last = data[-1]
+            energy = last.get("energy_charged")
+            sensor._attr_native_value = energy
+            sensor._attr_extra_state_attributes = {
+                "charge_duration": last.get("charge_duration"),
+                "user_id": last.get("user_id"),
+                "timestamp": datetime.datetime.fromtimestamp(
+                    last.get("timestamp_minutes", 0) * 60,
+                    tz=datetime.timezone.utc,
+                ).isoformat(),
+            }
+            sensor.async_write_ha_state()
+        except (
+            json.JSONDecodeError,
+            TypeError,
+            ValueError,
+            KeyError,
+        ) as err:
+            _LOGGER.warning("Failed to parse last_charges message: %s", err)
+
+    message_received(msg)
+    assert sensor._attr_native_value == 18.3
+    assert sensor._attr_extra_state_attributes["user_id"] == 3
+
+
+def test_last_charge_sensor_empty_array_no_crash():
+    """Test last charge sensor handles empty array gracefully."""
+    entry = _make_mock_entry(features=["charge_tracker"])
+    sensor = MabwarpLastChargeSensor(entry, DEFAULT_TOPIC_PREFIX)
+    msg = MagicMock()
+    msg.payload = b"[]"
+    sensor.async_write_ha_state = MagicMock()
+
+    def message_received(msg) -> None:
+        try:
+            payload_data = msg.payload
+            if isinstance(payload_data, bytes):
+                payload_data = payload_data.decode("utf-8")
+            data = json.loads(payload_data)
+            if not isinstance(data, list) or len(data) == 0:
+                sensor._attr_native_value = None
+                sensor._attr_extra_state_attributes = {}
+                _LOGGER.warning("Received empty last_charges array")
+                sensor.async_write_ha_state()
+                return
+            last = data[-1]
+            energy = last.get("energy_charged")
+            sensor._attr_native_value = energy
+            sensor._attr_extra_state_attributes = {
+                "charge_duration": last.get("charge_duration"),
+                "user_id": last.get("user_id"),
+                "timestamp": datetime.datetime.fromtimestamp(
+                    last.get("timestamp_minutes", 0) * 60,
+                    tz=datetime.timezone.utc,
+                ).isoformat(),
+            }
+            sensor.async_write_ha_state()
+        except (
+            json.JSONDecodeError,
+            TypeError,
+            ValueError,
+            KeyError,
+        ) as err:
+            _LOGGER.warning("Failed to parse last_charges message: %s", err)
+
+    message_received(msg)
+    assert sensor._attr_native_value is None
+    assert sensor._attr_extra_state_attributes == {}
+
+
+def test_charge_tracker_sensors_skipped_without_feature():
+    """Test charge tracker sensors are skipped when feature is not present."""
+    entry = _make_mock_entry(features=["evse"])
+    added = []
+
+    def async_add_entities(entities):
+        added.extend(entities)
+
+    with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+        asyncio.get_event_loop().run_until_complete(async_setup_entry(MagicMock(), entry, async_add_entities))
+
+    for entity in added:
+        topic = entity._topic
+        assert TOPIC_CHARGE_TRACKER_STATE.format(prefix=DEFAULT_TOPIC_PREFIX) not in topic
+        assert TOPIC_CHARGE_TRACKER_CURRENT.format(prefix=DEFAULT_TOPIC_PREFIX) not in topic
+        assert TOPIC_CHARGE_TRACKER_LAST.format(prefix=DEFAULT_TOPIC_PREFIX) not in topic

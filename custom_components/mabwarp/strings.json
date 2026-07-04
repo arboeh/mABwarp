@@ -56,7 +56,11 @@
       "firmware_version": { "name": "Firmware Version" },
       "display_type": { "name": "Display Type" },
       "display_name": { "name": "Display Name" },
-      "features": { "name": "Supported Features" }
+      "features": { "name": "Supported Features" },
+      "tracked_charges": { "name": "Tracked Charges" },
+      "current_charge_meter_start": { "name": "Current Charge Meter Start" },
+      "current_charge_user_id": { "name": "Current Charge User ID" },
+      "last_charge_energy": { "name": "Last Charge Energy" }
     },
     "number": {
       "charging_current_limit": { "name": "Charging Current Limit" }

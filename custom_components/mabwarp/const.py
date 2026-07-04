@@ -25,6 +25,12 @@ TOPIC_NFC_LAST_TAG = "{prefix}/nfc/last_seen"
 TOPIC_EVSE_SET_USER_ENABLED = "{prefix}/evse/set_user_enabled"
 TOPIC_EVSE_USER_ENABLED = "{prefix}/evse/user_enabled"
 TOPIC_INFO_FEATURES = "{prefix}/info/features"
+TOPIC_INFO_VERSION = "{prefix}/info/version"
+TOPIC_INFO_NAME = "{prefix}/info/name"
+TOPIC_INFO_DISPLAY_NAME = "{prefix}/info/display_name"
+TOPIC_CHARGE_TRACKER_STATE = "{prefix}/charge_tracker/state"
+TOPIC_CHARGE_TRACKER_CURRENT = "{prefix}/charge_tracker/current_charge"
+TOPIC_CHARGE_TRACKER_LAST = "{prefix}/charge_tracker/last_charges"
 
 # Meter Value IDs from WARP3 value_ids list
 METER_VALUE_ID_VOLTAGE_L1 = "13"
