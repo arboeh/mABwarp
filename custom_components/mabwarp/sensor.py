@@ -251,20 +251,15 @@ async def async_setup_entry(
                     None,
                     coordinator,
                 ),
-                # ASSUMPTION (not yet verified against real hardware):
-                # allocated_current is assumed to be in mA, analogous to
-                # allowed_charging_current. TODO: verify with real payload
-                # before first release.
                 MabwarpMqttSensor(
                     entry,
-                    TOPIC_CHARGE_MANAGER.format(prefix=topic_prefix),
-                    "Allocated Current",
-                    "allocated_current",
+                    TOPIC_METER_VALUES.format(prefix=topic_prefix),
+                    "Current L1",
+                    METER_VALUE_ID_CURRENT_L1,
                     "A",
                     SensorDeviceClass.CURRENT,
                     None,
                     coordinator,
-                    0.001,
                 ),
                 MabwarpMqttSensor(
                     entry,
@@ -417,15 +412,49 @@ async def async_setup_entry(
                 None,
                 coordinator,
             ),
-            # ASSUMPTION (not yet verified against real hardware):
-            # allocated_current is assumed to be in mA, analogous to
-            # allowed_charging_current. TODO: verify with real payload
-            # before first release.
+# MabwarpAllocatedCurrentSensor replaces the deprecated Allocated Current.
+            # Field name corrected from allocated_current to alloc[idx] on 2026-07-04,
+            # verified via mosquitto_sub. The alloc array contains 4 elements representing
+            # allocation slots for up to 4 chargers. Unit (mA vs A) still unverified -
+            # all observed values were 0.
             MabwarpMqttSensor(
                 entry,
                 TOPIC_CHARGE_MANAGER.format(prefix=topic_prefix),
-                "Allocated Current",
-                "allocated_current",
+                "Allocated Current Slot 0",
+                "alloc.0",
+                "A",
+                SensorDeviceClass.CURRENT,
+                None,
+                coordinator,
+                0.001,
+            ),
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_CHARGE_MANAGER.format(prefix=topic_prefix),
+                "Allocated Current Slot 1",
+                "alloc.1",
+                "A",
+                SensorDeviceClass.CURRENT,
+                None,
+                coordinator,
+                0.001,
+            ),
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_CHARGE_MANAGER.format(prefix=topic_prefix),
+                "Allocated Current Slot 2",
+                "alloc.2",
+                "A",
+                SensorDeviceClass.CURRENT,
+                None,
+                coordinator,
+                0.001,
+            ),
+            MabwarpMqttSensor(
+                entry,
+                TOPIC_CHARGE_MANAGER.format(prefix=topic_prefix),
+                "Allocated Current Slot 3",
+                "alloc.3",
                 "A",
                 SensorDeviceClass.CURRENT,
                 None,
@@ -799,7 +828,7 @@ class MabwarpMqttSensor(SensorEntity):
                 if self._conversion_factor is not None and isinstance(value, int | float):
                     value = value * self._conversion_factor
                 self._attr_native_value = value
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (
                 json.JSONDecodeError,
                 KeyError,
@@ -889,7 +918,7 @@ class MabwarpFeaturesSensor(SensorEntity):
                 else:
                     self._attr_native_value = 0
                     self._attr_extra_state_attributes = {"features": []}
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (
                 json.JSONDecodeError,
                 TypeError,
@@ -971,7 +1000,7 @@ class MabwarpLastChargeSensor(SensorEntity):
                     self._attr_native_value = None
                     self._attr_extra_state_attributes = {}
                     _LOGGER.warning("Received empty last_charges array")
-                    self.async_write_ha_state()
+                    self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
                     return
                 last = data[-1]
                 energy = last.get("energy_charged")
@@ -984,7 +1013,7 @@ class MabwarpLastChargeSensor(SensorEntity):
                         tz=datetime.UTC,
                     ).isoformat(),
                 }
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (
                 json.JSONDecodeError,
                 TypeError,
@@ -1046,7 +1075,7 @@ class MabwarpChargeModeSensor(SensorEntity):
                 if mode is not None:
                     self._attr_native_value = CHARGE_MODE_MAP.get(int(mode), f"Unknown ({mode})")
                     self._attr_extra_state_attributes = {"mode": int(mode)}
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (
                 json.JSONDecodeError,
                 KeyError,
@@ -1111,7 +1140,7 @@ class MabwarpConfigErrorFlagsSensor(SensorEntity):
                     for idx, flag_name in enumerate(CONFIG_ERROR_FLAG_BITS):
                         decoded[flag_name] = bool(int(flags) & (1 << idx))
                     self._attr_extra_state_attributes = decoded
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (
                 json.JSONDecodeError,
                 KeyError,
@@ -1212,7 +1241,7 @@ class MabwarpSolarPlaneConfigSensor(SensorEntity):
                     "name": data.get("name"),
                     "place": data.get("place"),
                 }
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (
                 json.JSONDecodeError,
                 KeyError,
@@ -1276,7 +1305,7 @@ class MabwarpChargeLimitsTimestampSensor(SensorEntity):
                     self._attr_native_value = datetime.datetime.fromtimestamp(int(value) / 1000, tz=datetime.UTC)
                 else:
                     self._attr_native_value = None
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (
                 json.JSONDecodeError,
                 KeyError,
@@ -1363,7 +1392,7 @@ class MabwarpP14aEnwgThrottledBinarySensor(BinarySensorEntity):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
                 self._attr_is_on = bool(data.get("throttled", False))
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (
                 json.JSONDecodeError,
                 KeyError,
