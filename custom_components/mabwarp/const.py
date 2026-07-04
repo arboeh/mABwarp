@@ -69,8 +69,9 @@ METER_VALUE_ID_POWER_L3 = "21"
 METER_VALUE_ID_POWER_TOTAL = "30"
 METER_VALUE_ID_ENERGY_TOTAL = "40"
 
-# Charge Mode mapping (ASSUMPTION - not yet verified against real hardware)
-# 0=Standby, 1=Min, 2=PV, 3=Min+PV analog zur WARP-Weboberfläche
+# ASSUMPTION: Charge Mode mapping is not yet verified against official
+# WARP documentation or real hardware. 0=Standby, 1=Min, 2=PV, 3=Min+PV
+# is assumed analog to the WARP web interface. TODO: verify before release.
 CHARGE_MODE_MAP = {
     0: "Standby",
     1: "Min",
