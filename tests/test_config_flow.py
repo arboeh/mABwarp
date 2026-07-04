@@ -51,9 +51,15 @@ def test_empty_device_id_uses_topic_prefix():
     hass = _make_mock_hass(has_mqtt=True)
     flow = MabwarpConfigFlow()
     flow.hass = hass
-    result = asyncio.get_event_loop().run_until_complete(
-        flow.async_step_user({"topic_prefix": "warp3", "device_id": "", "warp_version": "WARP3"})
-    )
+
+    def mock_async_subscribe(hass, topic, callback, qos):
+        return lambda: None
+
+    with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
+        result = asyncio.get_event_loop().run_until_complete(
+            flow.async_step_user({"topic_prefix": "warp3", "device_id": "", "warp_version": "WARP3"})
+        )
+
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "WARP Charger (warp3)"
     assert result["data"][CONF_DEVICE_ID] == "warp3"
@@ -64,9 +70,15 @@ def test_successful_entry_creation():
     hass = _make_mock_hass(has_mqtt=True)
     flow = MabwarpConfigFlow()
     flow.hass = hass
-    result = asyncio.get_event_loop().run_until_complete(
-        flow.async_step_user({"topic_prefix": "warp", "device_id": "TEST01", "warp_version": "WARP3"})
-    )
+
+    def mock_async_subscribe(hass, topic, callback, qos):
+        return lambda: None
+
+    with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
+        result = asyncio.get_event_loop().run_until_complete(
+            flow.async_step_user({"topic_prefix": "warp", "device_id": "TEST01", "warp_version": "WARP3"})
+        )
+
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "WARP Charger (TEST01)"
     assert result["data"][CONF_DEVICE_ID] == "TEST01"
@@ -114,10 +126,8 @@ def test_features_detected_and_stored():
     flow = MabwarpConfigFlow()
     flow.hass = hass
 
-    callback_holder = {}
-
     def mock_async_subscribe(hass, topic, callback, qos):
-        callback_holder["callback"] = callback
+        callback(_mock_msg(b'["evse","meters","nfc"]'))
         return lambda: None
 
     with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
@@ -164,14 +174,23 @@ def test_options_flow_redetects_features_and_reloads():
     hass.config_entries._entries = [entry]
     hass.config_entries.async_entries = MagicMock(return_value=[entry])
 
-    handler = MabwarpOptionsFlowHandler(entry)
+    def _mock_async_update_entry(updated_entry, data):
+        updated_entry.data = data
+
+    hass.config_entries.async_update_entry = MagicMock(side_effect=_mock_async_update_entry)
+
+    async def _mock_async_reload(entry_id):
+        return None
+
+    hass.config_entries.async_reload = MagicMock(side_effect=_mock_async_reload)
+
+    handler = MabwarpOptionsFlowHandler()
+    handler.config_entry = entry
     handler.hass = hass
 
     def mock_async_subscribe(hass, topic, callback, qos):
-        def _unsubscribe():
-            pass
         callback(_mock_msg(b'["evse","meters","nfc"]'))
-        return _unsubscribe
+        return lambda: None
 
     with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
         result = asyncio.get_event_loop().run_until_complete(

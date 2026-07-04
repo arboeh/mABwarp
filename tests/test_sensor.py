@@ -1,6 +1,9 @@
 # tests/test_sensor.py
 
 import asyncio
+import datetime
+import json
+import logging
 from unittest.mock import MagicMock, patch
 
 from custom_components.mabwarp.const import (
@@ -15,6 +18,7 @@ from custom_components.mabwarp.const import (
     TOPIC_CHARGE_TRACKER_LAST,
     TOPIC_CHARGE_TRACKER_STATE,
     TOPIC_EVSE_STATE,
+    TOPIC_INFO_VERSION,
     TOPIC_METER_VALUES,
     TOPIC_NFC_LAST_TAG,
 )
@@ -353,16 +357,7 @@ def test_firmware_version_sensor_parses_correctly():
 def test_current_charge_sensor_idle_when_no_session():
     """Test current charge user ID sensor returns None when user_id is -1."""
     entry = _make_mock_entry(features=["charge_tracker"])
-    sensor = MabwarpCurrentChargeUserIDSensor(
-        entry,
-        TOPIC_CHARGE_TRACKER_CURRENT.format(prefix=DEFAULT_TOPIC_PREFIX),
-        "Current Charge User ID",
-        "user_id",
-        None,
-        None,
-        None,
-        coordinator=None,
-    )
+    sensor = MabwarpCurrentChargeUserIDSensor(entry, DEFAULT_TOPIC_PREFIX)
     msg = MagicMock()
     msg.payload = (
         b'{"user_id": -1, "meter_start": 0.0, "evse_uptime_start": 0, '
@@ -389,7 +384,7 @@ def test_current_charge_sensor_idle_when_no_session():
             TypeError,
             ValueError,
         ) as err:
-            _LOGGER.warning("Failed to parse current_charge message on %s: %s", sensor._topic, err)
+            logging.warning("Failed to parse current_charge message on %s: %s", sensor._topic, err)
 
     message_received(msg)
     assert sensor._attr_native_value is None
@@ -417,7 +412,7 @@ def test_last_charge_sensor_uses_latest_entry():
             if not isinstance(data, list) or len(data) == 0:
                 sensor._attr_native_value = None
                 sensor._attr_extra_state_attributes = {}
-                _LOGGER.warning("Received empty last_charges array")
+                logging.warning("Received empty last_charges array")
                 sensor.async_write_ha_state()
                 return
             last = data[-1]
@@ -428,7 +423,7 @@ def test_last_charge_sensor_uses_latest_entry():
                 "user_id": last.get("user_id"),
                 "timestamp": datetime.datetime.fromtimestamp(
                     last.get("timestamp_minutes", 0) * 60,
-                    tz=datetime.timezone.utc,
+                    tz=datetime.UTC,
                 ).isoformat(),
             }
             sensor.async_write_ha_state()
@@ -438,7 +433,7 @@ def test_last_charge_sensor_uses_latest_entry():
             ValueError,
             KeyError,
         ) as err:
-            _LOGGER.warning("Failed to parse last_charges message: %s", err)
+            logging.warning("Failed to parse last_charges message: %s", err)
 
     message_received(msg)
     assert sensor._attr_native_value == 18.3
@@ -462,7 +457,7 @@ def test_last_charge_sensor_empty_array_no_crash():
             if not isinstance(data, list) or len(data) == 0:
                 sensor._attr_native_value = None
                 sensor._attr_extra_state_attributes = {}
-                _LOGGER.warning("Received empty last_charges array")
+                logging.warning("Received empty last_charges array")
                 sensor.async_write_ha_state()
                 return
             last = data[-1]
@@ -473,7 +468,7 @@ def test_last_charge_sensor_empty_array_no_crash():
                 "user_id": last.get("user_id"),
                 "timestamp": datetime.datetime.fromtimestamp(
                     last.get("timestamp_minutes", 0) * 60,
-                    tz=datetime.timezone.utc,
+                    tz=datetime.UTC,
                 ).isoformat(),
             }
             sensor.async_write_ha_state()
@@ -483,7 +478,7 @@ def test_last_charge_sensor_empty_array_no_crash():
             ValueError,
             KeyError,
         ) as err:
-            _LOGGER.warning("Failed to parse last_charges message: %s", err)
+            logging.warning("Failed to parse last_charges message: %s", err)
 
     message_received(msg)
     assert sensor._attr_native_value is None

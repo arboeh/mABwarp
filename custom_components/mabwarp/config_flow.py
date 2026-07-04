@@ -32,6 +32,37 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def _detect_features(hass, topic_prefix: str) -> list[str]:
+    """Detect features from the charger via MQTT."""
+    features: list[str] = []
+    topic = TOPIC_INFO_FEATURES.format(prefix=topic_prefix)
+    future: asyncio.Future[list[str]] = asyncio.get_event_loop().create_future()
+
+    def _features_message_received(msg) -> None:
+        try:
+            payload = msg.payload
+            if isinstance(payload, bytes):
+                payload = payload.decode("utf-8")
+            data = json.loads(payload)
+            if isinstance(data, list):
+                future.set_result([str(item) for item in data])
+            else:
+                future.set_result([])
+        except (json.JSONDecodeError, TypeError, ValueError) as err:
+            _LOGGER.warning("Failed to parse features message: %s", err)
+            future.set_result([])
+
+    unsubscribe = await async_subscribe(hass, topic, _features_message_received, 0)
+    try:
+        features = await asyncio.wait_for(future, timeout=5)
+    except TimeoutError:
+        _LOGGER.warning("Feature detection timed out for %s", topic_prefix)
+        features = []
+    finally:
+        unsubscribe()
+    return features
+
+
 class MabwarpConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Configuration flow for mABwarp."""
 
@@ -41,36 +72,6 @@ class MabwarpConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: igno
     def options_flow(entry: config_entries.ConfigEntry):
         """Return the options flow handler."""
         return MabwarpOptionsFlowHandler(entry)
-
-    async def _detect_features(self, topic_prefix: str) -> list[str]:
-        """Detect features from the charger."""
-        features: list[str] = []
-        topic = TOPIC_INFO_FEATURES.format(prefix=topic_prefix)
-        future: asyncio.Future[list[str]] = asyncio.get_event_loop().create_future()
-
-        def _features_message_received(msg) -> None:
-            try:
-                payload = msg.payload
-                if isinstance(payload, bytes):
-                    payload = payload.decode("utf-8")
-                data = json.loads(payload)
-                if isinstance(data, list):
-                    future.set_result([str(item) for item in data])
-                else:
-                    future.set_result([])
-            except (json.JSONDecodeError, TypeError, ValueError) as err:
-                _LOGGER.warning("Failed to parse features message: %s", err)
-                future.set_result([])
-
-        unsubscribe = await async_subscribe(self.hass, topic, _features_message_received, 0)
-        try:
-            features = await asyncio.wait_for(future, timeout=5)
-        except TimeoutError:
-            _LOGGER.warning("Feature detection timed out for %s", topic_prefix)
-            features = []
-        finally:
-            unsubscribe()
-        return features
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -89,7 +90,7 @@ class MabwarpConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: igno
             if existing:
                 return self.async_abort(reason="already_configured")
 
-            features = await self._detect_features(user_input[CONF_TOPIC_PREFIX])
+            features = await _detect_features(self.hass, user_input[CONF_TOPIC_PREFIX])
             user_input[CONF_FEATURES] = features
             return self.async_create_entry(
                 title=f"WARP Charger ({user_input[CONF_DEVICE_ID]})",
@@ -111,11 +112,9 @@ class MabwarpOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             entry = self.config_entry
             topic_prefix = entry.data[CONF_TOPIC_PREFIX]
-            features = await self._detect_features(topic_prefix)
+            features = await _detect_features(self.hass, topic_prefix)
 
-            self.hass.config_entries.async_update_entry(
-                entry, data={**entry.data, CONF_FEATURES: features}
-            )
+            self.hass.config_entries.async_update_entry(entry, data={**entry.data, CONF_FEATURES: features})
             await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_create_entry(title="", data={})
 
@@ -124,33 +123,3 @@ class MabwarpOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=vol.Schema({}),
             description_placeholders={},
         )
-
-    async def _detect_features(self, topic_prefix: str) -> list[str]:
-        """Detect features from the charger."""
-        features: list[str] = []
-        topic = TOPIC_INFO_FEATURES.format(prefix=topic_prefix)
-        future: asyncio.Future[list[str]] = asyncio.get_event_loop().create_future()
-
-        def _features_message_received(msg) -> None:
-            try:
-                payload = msg.payload
-                if isinstance(payload, bytes):
-                    payload = payload.decode("utf-8")
-                data = json.loads(payload)
-                if isinstance(data, list):
-                    future.set_result([str(item) for item in data])
-                else:
-                    future.set_result([])
-            except (json.JSONDecodeError, TypeError, ValueError) as err:
-                _LOGGER.warning("Failed to parse features message: %s", err)
-                future.set_result([])
-
-        unsubscribe = await async_subscribe(self.hass, topic, _features_message_received, 0)
-        try:
-            features = await asyncio.wait_for(future, timeout=5)
-        except TimeoutError:
-            _LOGGER.warning("Feature detection timed out for %s", topic_prefix)
-            features = []
-        finally:
-            unsubscribe()
-        return features

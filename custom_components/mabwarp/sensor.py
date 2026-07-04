@@ -661,6 +661,19 @@ class MabwarpFeaturesSensor(SensorEntity):
 class MabwarpCurrentChargeUserIDSensor(MabwarpMqttSensor):
     """Sensor for current charge user ID with idle-state handling."""
 
+    def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
+        """Initialize the sensor."""
+        super().__init__(
+            config_entry,
+            TOPIC_CHARGE_TRACKER_CURRENT.format(prefix=topic_prefix),
+            "Current Charge User ID",
+            "user_id",
+            None,
+            None,
+            None,
+            coordinator=None,
+        )
+
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
 
