@@ -30,6 +30,14 @@
       "description": "Feature-Erkennung fehlgeschlagen. Alle Sensoren werden trotzdem eingerichtet, könnten aber 'nicht verfügbar' anzeigen."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Optionen",
+        "description": "Feature-Erkennung erneut ausführen"
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "iec61851_state": { "name": "IEC61851-Status" },

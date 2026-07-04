@@ -15,8 +15,11 @@ class MockConfigEntry:
 
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.mabwarp.config_flow import MabwarpConfigFlow
-from custom_components.mabwarp.const import CONF_DEVICE_ID
+from custom_components.mabwarp.config_flow import MabwarpConfigFlow, MabwarpOptionsFlowHandler
+from custom_components.mabwarp.const import (
+    CONF_DEVICE_ID,
+    CONF_FEATURES,
+)
 
 
 def _make_mock_hass(has_mqtt=True, existing_entries=None):
@@ -142,3 +145,39 @@ def test_features_timeout_falls_back_to_empty_list():
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"]["features"] == []
+
+
+def test_options_flow_redetects_features_and_reloads():
+    """Test options flow re-detects features and reloads the entry."""
+    hass = _make_mock_hass(has_mqtt=True)
+    entry = MockConfigEntry(
+        domain="mabwarp",
+        data={
+            "topic_prefix": "warp",
+            "device_id": "TEST01",
+            "warp_version": "WARP3",
+            CONF_FEATURES: ["evse"],
+        },
+        title="WARP Charger (TEST01)",
+    )
+    entry.entry_id = "test_entry_id"
+    hass.config_entries._entries = [entry]
+    hass.config_entries.async_entries = MagicMock(return_value=[entry])
+
+    handler = MabwarpOptionsFlowHandler(entry)
+    handler.hass = hass
+
+    def mock_async_subscribe(hass, topic, callback, qos):
+        def _unsubscribe():
+            pass
+        callback(_mock_msg(b'["evse","meters","nfc"]'))
+        return _unsubscribe
+
+    with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
+        result = asyncio.get_event_loop().run_until_complete(
+            handler.async_step_init({"dummy": True})
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert entry.data[CONF_FEATURES] == ["evse", "meters", "nfc"]
+    hass.config_entries.async_reload.assert_called_once_with("test_entry_id")

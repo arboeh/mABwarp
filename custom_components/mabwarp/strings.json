@@ -30,6 +30,14 @@
       "description": "Feature detection failed. All sensors will be set up anyway but may show as unavailable."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "description": "Re-detect features"
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "iec61851_state": { "name": "IEC61851 State" },
