@@ -81,7 +81,8 @@
       "charge_limits_start_timestamp_ms": { "name": "Charge Limits Start Timestamp" },
       "charge_limits_target_timestamp_ms": { "name": "Charge Limits Target Timestamp" },
       "charge_limits_start_energy_kwh": { "name": "Charge Limits Start Energy" },
-      "charge_limits_target_energy_kwh": { "name": "Charge Limits Target Energy" }
+      "charge_limits_target_energy_kwh": { "name": "Charge Limits Target Energy" },
+      "temperature_current": { "name": "Temperature Current" }
     },
     "number": {
       "charging_current_limit": { "name": "Charging Current Limit" },

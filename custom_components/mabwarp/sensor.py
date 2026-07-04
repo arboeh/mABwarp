@@ -58,6 +58,7 @@ from .const import (
     TOPIC_SOLAR_FORECAST_PLANES_STATE,
     TOPIC_SOLAR_FORECAST_STATE,
     TOPIC_CHARGE_LIMITS_STATE,
+    TOPIC_TEMPERATURES_STATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -612,6 +613,53 @@ async def async_setup_entry(
                 ),
             ]
         )
+
+    # Temperature sensors
+    has_temperatures = "temperatures" in features
+    if has_temperatures:
+        temp_topic = TOPIC_TEMPERATURES_STATE.format(prefix=topic_prefix)
+        entities.append(
+            MabwarpTemperatureSensor(entry, topic_prefix, "Temperature Current", "current")
+        )
+
+        async def _discover_temperature_keys():
+            future = asyncio.get_event_loop().create_future()
+            discovered_keys = set()
+
+            def _temp_message_received(msg) -> None:
+                try:
+                    payload = msg.payload
+                    if isinstance(payload, bytes):
+                        payload = payload.decode("utf-8")
+                    data = json.loads(payload)
+                    if isinstance(data, dict):
+                        keys = [k for k in data.keys() if k not in discovered_keys]
+                        if keys:
+                            future.set_result(keys)
+                        else:
+                            future.set_result([])
+                except (json.JSONDecodeError, TypeError, ValueError):
+                    future.set_result([])
+
+            unsub = await async_subscribe(hass, temp_topic, _temp_message_received, 0)
+            try:
+                new_keys = await asyncio.wait_for(future, timeout=5)
+            except TimeoutError:
+                new_keys = []
+            finally:
+                unsub()
+
+            if new_keys:
+                temp_entities = []
+                for key in new_keys:
+                    discovered_keys.add(key)
+                    temp_entities.append(
+                        MabwarpTemperatureSensor(entry, topic_prefix, f"Temperature {key.title()}", key)
+                    )
+                if temp_entities:
+                    async_add_entities(temp_entities)
+
+        hass.create_task(_discover_temperature_keys())
 
     # Features sensor
     entities.append(MabwarpFeaturesSensor(entry, topic_prefix))
@@ -1268,3 +1316,20 @@ class MabwarpChargeLimitsEnergySensor(MabwarpMqttSensor):
     def extract_field(self, data: dict) -> Any:
         value = super().extract_field(data)
         return None if value is None else value
+
+
+class MabwarpTemperatureSensor(MabwarpMqttSensor):
+    """Sensor for temperature values."""
+
+    def __init__(self, config_entry: ConfigEntry, topic_prefix: str, name: str, field_name: str) -> None:
+        """Initialize the sensor."""
+        super().__init__(
+            config_entry,
+            TOPIC_TEMPERATURES_STATE.format(prefix=topic_prefix),
+            name,
+            field_name,
+            "°C",
+            SensorDeviceClass.TEMPERATURE,
+            None,
+            coordinator=None,
+        )

@@ -81,7 +81,8 @@
       "charge_limits_start_timestamp_ms": { "name": "Ladegrenzen Startzeit" },
       "charge_limits_target_timestamp_ms": { "name": "Ladegrenzen Zielzeit" },
       "charge_limits_start_energy_kwh": { "name": "Ladegrenzen Startenergie" },
-      "charge_limits_target_energy_kwh": { "name": "Ladegrenzen Zielenergie" }
+      "charge_limits_target_energy_kwh": { "name": "Ladegrenzen Zielenergie" },
+      "temperature_current": { "name": "Temperatur Aktuell" }
     },
     "number": {
       "charging_current_limit": { "name": "Ladestrom-Begrenzung" },
