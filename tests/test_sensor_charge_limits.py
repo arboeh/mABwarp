@@ -18,7 +18,6 @@ from custom_components.mabwarp.sensor_charge_limits import (
     MabwarpChargeLimitsEnergySensor,
     MabwarpChargeLimitsTimestampSensor,
 )
-
 from tests.conftest import make_mock_hass
 
 

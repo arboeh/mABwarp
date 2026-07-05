@@ -20,7 +20,6 @@ from custom_components.mabwarp.sensor_solar_forecast import (
     MabwarpSolarPlaneConfigSensor,
     MabwarpSolarPlaneStateSensor,
 )
-
 from tests.conftest import make_mock_hass
 
 

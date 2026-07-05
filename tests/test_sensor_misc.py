@@ -24,7 +24,6 @@ from custom_components.mabwarp.sensor_misc import (
     MabwarpP14aEnwgThrottledBinarySensor,
     MabwarpTemperatureSensor,
 )
-
 from tests.conftest import make_mock_hass
 
 

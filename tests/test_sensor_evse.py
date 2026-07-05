@@ -13,7 +13,6 @@ from custom_components.mabwarp.const import (
     TOPIC_NFC_LAST_TAG,
 )
 from custom_components.mabwarp.sensor import async_setup_entry
-
 from tests.conftest import make_mock_hass
 
 

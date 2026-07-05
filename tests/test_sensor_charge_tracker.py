@@ -21,7 +21,6 @@ from custom_components.mabwarp.sensor_charge_tracker import (
     MabwarpCurrentChargeUserIDSensor,
     MabwarpLastChargeSensor,
 )
-
 from tests.conftest import make_mock_hass
 
 

@@ -4,7 +4,6 @@ import asyncio
 from unittest.mock import MagicMock, patch
 
 from custom_components.mabwarp.sensor import async_setup_entry
-
 from tests.conftest import make_mock_hass
 
 

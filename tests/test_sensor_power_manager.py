@@ -21,7 +21,6 @@ from custom_components.mabwarp.sensor_power_manager import (
     MabwarpChargeModeSensor,
     MabwarpConfigErrorFlagsSensor,
 )
-
 from tests.conftest import make_mock_hass
 
 
