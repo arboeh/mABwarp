@@ -22,13 +22,7 @@ from custom_components.mabwarp.sensor_power_manager import (
     MabwarpConfigErrorFlagsSensor,
 )
 
-
-def _make_mock_hass():
-    hass = MagicMock()
-    hass.config_entries = MagicMock()
-    hass.config_entries.async_entries = MagicMock(return_value=[])
-    hass.async_create_task = MagicMock()
-    return hass
+from tests.conftest import make_mock_hass
 
 
 def _make_mock_entry(features=None):
@@ -51,7 +45,7 @@ def test_power_manager_sensors_skipped_without_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.run(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
+        asyncio.run(async_setup_entry(make_mock_hass(), entry, async_add_entities))
 
     for entity in added:
         topic = entity._topic
@@ -69,7 +63,7 @@ def test_power_manager_sensors_created_with_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.run(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
+        asyncio.run(async_setup_entry(make_mock_hass(), entry, async_add_entities))
 
     power_manager_topics = [
         TOPIC_POWER_MANAGER_CHARGE_MODE.format(prefix=DEFAULT_TOPIC_PREFIX),

@@ -5,13 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from custom_components.mabwarp.sensor import async_setup_entry
 
-
-def _make_mock_hass():
-    hass = MagicMock()
-    hass.config_entries = MagicMock()
-    hass.config_entries.async_entries = MagicMock(return_value=[])
-    hass.async_create_task = MagicMock()
-    return hass
+from tests.conftest import make_mock_hass
 
 
 def _make_mock_entry(features=None):
@@ -43,14 +37,14 @@ def test_no_duplicate_unique_ids():
 
     async def run_test():
         with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-            await async_setup_entry(_make_mock_hass(), entry, async_add_entities)
+            await async_setup_entry(make_mock_hass(), entry, async_add_entities)
 
     asyncio.run(run_test())
 
     unique_ids = [e.unique_id for e in added]
-    assert len(unique_ids) == len(set(unique_ids)), (
-        f"Duplicate unique_ids found: {[uid for uid in unique_ids if unique_ids.count(uid) > 1]}"
-    )
+    assert len(unique_ids) == len(
+        set(unique_ids)
+    ), f"Duplicate unique_ids found: {[uid for uid in unique_ids if unique_ids.count(uid) > 1]}"
 
 
 def test_alloc_slots_have_unique_names():
@@ -63,7 +57,7 @@ def test_alloc_slots_have_unique_names():
 
     async def run_test():
         with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-            await async_setup_entry(_make_mock_hass(), entry, async_add_entities)
+            await async_setup_entry(make_mock_hass(), entry, async_add_entities)
 
     asyncio.run(run_test())
 
@@ -83,7 +77,7 @@ def test_solar_forecast_discovery_creates_background_task():
     def async_add_entities(entities):
         added.extend(entities)
 
-    hass = _make_mock_hass()
+    hass = make_mock_hass()
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
         asyncio.run(async_setup_entry(hass, entry, async_add_entities))
 
@@ -101,7 +95,7 @@ def test_temperature_discovery_creates_background_task():
     def async_add_entities(entities):
         added.extend(entities)
 
-    hass = _make_mock_hass()
+    hass = make_mock_hass()
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
         asyncio.run(async_setup_entry(hass, entry, async_add_entities))
 

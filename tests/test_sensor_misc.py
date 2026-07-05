@@ -25,13 +25,7 @@ from custom_components.mabwarp.sensor_misc import (
     MabwarpTemperatureSensor,
 )
 
-
-def _make_mock_hass():
-    hass = MagicMock()
-    hass.config_entries = MagicMock()
-    hass.config_entries.async_entries = MagicMock(return_value=[])
-    hass.async_create_task = MagicMock()
-    return hass
+from tests.conftest import make_mock_hass
 
 
 def _make_mock_entry(features=None):
@@ -80,7 +74,7 @@ def test_temperature_sensors_skipped_without_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.run(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
+        asyncio.run(async_setup_entry(make_mock_hass(), entry, async_add_entities))
 
     for entity in added:
         topic = entity._topic
@@ -96,7 +90,7 @@ def test_temperature_sensors_created_with_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.run(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
+        asyncio.run(async_setup_entry(make_mock_hass(), entry, async_add_entities))
 
     temp_topics = [TOPIC_TEMPERATURES_STATE.format(prefix=DEFAULT_TOPIC_PREFIX)]
     for topic in temp_topics:
@@ -120,7 +114,7 @@ def test_p14a_enwg_sensors_skipped_without_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.run(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
+        asyncio.run(async_setup_entry(make_mock_hass(), entry, async_add_entities))
 
     for entity in added:
         topic = entity._topic
@@ -136,7 +130,7 @@ def test_p14a_enwg_sensors_created_with_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.run(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
+        asyncio.run(async_setup_entry(make_mock_hass(), entry, async_add_entities))
 
     p14a_topics = [TOPIC_P14A_ENWG_STATE.format(prefix=DEFAULT_TOPIC_PREFIX)]
     for topic in p14a_topics:

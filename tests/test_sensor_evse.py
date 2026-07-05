@@ -14,13 +14,7 @@ from custom_components.mabwarp.const import (
 )
 from custom_components.mabwarp.sensor import async_setup_entry
 
-
-def _make_mock_hass():
-    hass = MagicMock()
-    hass.config_entries = MagicMock()
-    hass.config_entries.async_entries = MagicMock(return_value=[])
-    hass.async_create_task = MagicMock()
-    return hass
+from tests.conftest import make_mock_hass
 
 
 def _make_mock_entry(features=None):
@@ -43,7 +37,7 @@ def test_meter_sensors_skipped_without_meters_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.run(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
+        asyncio.run(async_setup_entry(make_mock_hass(), entry, async_add_entities))
 
     for entity in added:
         topic = entity._topic
@@ -59,7 +53,7 @@ def test_meter_sensors_created_with_empty_features_fallback():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.run(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
+        asyncio.run(async_setup_entry(make_mock_hass(), entry, async_add_entities))
 
     meter_topics = [e._topic for e in added if TOPIC_METER_VALUES.format(prefix=DEFAULT_TOPIC_PREFIX) in e._topic]
     assert len(meter_topics) > 0
@@ -74,7 +68,7 @@ def test_nfc_sensors_skipped_without_nfc_feature():
         added.extend(entities)
 
     with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.run(async_setup_entry(_make_mock_hass(), entry, async_add_entities))
+        asyncio.run(async_setup_entry(make_mock_hass(), entry, async_add_entities))
 
     for entity in added:
         topic = entity._topic

@@ -1,5 +1,8 @@
 # tests/conftest.py
 
+import asyncio
+from unittest.mock import MagicMock
+
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore
 
@@ -24,3 +27,15 @@ def mock_config_entry() -> MockConfigEntry:
         },
         title="WARP Charger (TEST01)",
     )
+
+
+def make_mock_hass():
+    """Return a MagicMock hass with async_create_task that actually schedules coroutines."""
+    hass = MagicMock()
+    hass.config_entries = MagicMock()
+    hass.config_entries.async_entries = MagicMock(return_value=[])
+    create_task_mock = MagicMock(
+        side_effect=lambda coro: asyncio.get_event_loop().create_task(coro)
+    )
+    hass.async_create_task = create_task_mock
+    return hass
