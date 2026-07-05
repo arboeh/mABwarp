@@ -18,7 +18,14 @@ Brief explanation of each file and its role:
 
 
 ### Entity platforms
-- `custom_components/mabwarp/sensor.py` – all read-only MQTT sensors (~18 entities)
+- `custom_components/mabwarp/sensor.py` – sensor platform entry point, duplicate-ID check, coordinator setup
+- `custom_components/mabwarp/sensor_base.py` – `MabwarpMqttSensor` base class, `MeterValueCoordinator`, `check_plausibility`
+- `custom_components/mabwarp/sensor_evse.py` – EVSE state, low-level, meter-value, and NFC sensors
+- `custom_components/mabwarp/sensor_charge_tracker.py` – charge tracker (current user, last charge, tracked charges)
+- `custom_components/mabwarp/sensor_power_manager.py` – power manager (charge mode, config errors, low-level power)
+- `custom_components/mabwarp/sensor_solar_forecast.py` – solar forecast values and dynamic plane discovery
+- `custom_components/mabwarp/sensor_charge_limits.py` – charge limits timestamps and energy sensors
+- `custom_components/mabwarp/sensor_misc.py` – features, info, charge manager, temperature, and P14A ENWG sensors
 - `custom_components/mabwarp/number.py` – bidirectional charging current control
 - `custom_components/mabwarp/button.py` – write-only start/stop buttons
 - `custom_components/mabwarp/switch.py` – bidirectional user enable/disable
@@ -27,7 +34,14 @@ Brief explanation of each file and its role:
 ### Tests
 - `tests/conftest.py` – shared fixtures (MockConfigEntry)
 - `tests/test_config_flow.py` – config flow unit tests
-- `tests/test_sensor.py` – sensor entity unit tests
+- `tests/test_sensor.py` – sensor setup/integration tests (duplicate-ID check, discovery tasks)
+- `tests/test_sensor_base.py` – base sensor class, coordinator, extract_field tests
+- `tests/test_sensor_evse.py` – EVSE, meter, and NFC sensor tests
+- `tests/test_sensor_charge_tracker.py` – charge tracker sensor tests
+- `tests/test_sensor_power_manager.py` – power manager sensor tests
+- `tests/test_sensor_solar_forecast.py` – solar forecast sensor tests
+- `tests/test_sensor_charge_limits.py` – charge limits sensor tests
+- `tests/test_sensor_misc.py` – misc sensor tests (features, temperature, P14A ENWG)
 - `tests/test_number.py` – number entity unit tests
 - `tests/test_button.py` – button entity unit tests
 - `tests/test_switch.py` – switch entity unit tests
@@ -49,9 +63,16 @@ Brief explanation of each file and its role:
 
 ## Adding a New Sensor
 1. Add topic constant to `const.py` if needed
-2. Add `MabwarpMqttSensor(...)` instance to `async_setup_entry` in `sensor.py`
+2. Add the sensor to the appropriate `sensor_*.py` module:
+   - EVSE / meter / NFC → `sensor_evse.py`
+   - Charge tracker → `sensor_charge_tracker.py`
+   - Power manager → `sensor_power_manager.py`
+   - Solar forecast → `sensor_solar_forecast.py`
+   - Charge limits → `sensor_charge_limits.py`
+   - Info / features / temperature / P14A ENWG / charge manager → `sensor_misc.py`
+   - Generic MQTT sensor → extend `sensor_base.py` and add a `build_*` call in `sensor.py`
 3. Add translation key to `translations/en.json`, `translations/de.json` and `strings.json`
-4. Add test case to `tests/test_sensor.py`
+4. Add test case to the corresponding `tests/test_sensor_*.py`
 
 
 ## Adding a New Entity Type (e.g. select, text)
