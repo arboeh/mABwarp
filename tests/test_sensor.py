@@ -77,8 +77,14 @@ def test_solar_forecast_discovery_creates_background_task():
         added.extend(entities)
 
     hass = make_mock_hass()
-    with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.run(async_setup_entry(hass, entry, async_add_entities))
+
+    async def run_test():
+        with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+            with patch("custom_components.mabwarp.sensor_solar_forecast.async_subscribe", return_value=lambda: None):
+                await async_setup_entry(hass, entry, async_add_entities)
+        await asyncio.sleep(0)
+
+    asyncio.run(run_test())
 
     assert hass.async_create_task.call_count == 1
     discovered_coro = hass.async_create_task.call_args[0][0]
@@ -95,8 +101,14 @@ def test_temperature_discovery_creates_background_task():
         added.extend(entities)
 
     hass = make_mock_hass()
-    with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.run(async_setup_entry(hass, entry, async_add_entities))
+
+    async def run_test():
+        with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+            with patch("custom_components.mabwarp.sensor_misc.async_subscribe", return_value=lambda: None):
+                await async_setup_entry(hass, entry, async_add_entities)
+        await asyncio.sleep(0)
+
+    asyncio.run(run_test())
 
     assert hass.async_create_task.call_count == 1
     discovered_coro = hass.async_create_task.call_args[0][0]

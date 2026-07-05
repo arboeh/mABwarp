@@ -88,8 +88,15 @@ def test_temperature_sensors_created_with_feature():
     def async_add_entities(entities):
         added.extend(entities)
 
-    with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
-        asyncio.run(async_setup_entry(make_mock_hass(), entry, async_add_entities))
+    hass = make_mock_hass()
+
+    async def run_test():
+        with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+            with patch("custom_components.mabwarp.sensor_misc.async_subscribe", return_value=lambda: None):
+                await async_setup_entry(hass, entry, async_add_entities)
+        await asyncio.sleep(0)
+
+    asyncio.run(run_test())
 
     temp_topics = [TOPIC_TEMPERATURES_STATE.format(prefix=DEFAULT_TOPIC_PREFIX)]
     for topic in temp_topics:

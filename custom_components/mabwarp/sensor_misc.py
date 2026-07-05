@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -217,7 +218,12 @@ def _discover_temperature_keys(
             future.set_result([])
 
     async def _discover_temperature_keys():
-        unsub = await async_subscribe(hass, temp_topic, _temp_message_received, 0)
+        try:
+            unsub = await async_subscribe(hass, temp_topic, _temp_message_received, 0)
+        except HomeAssistantError as err:
+            _LOGGER.warning("Failed to subscribe for temperature key discovery: %s", err)
+            return
+
         try:
             new_keys = await asyncio.wait_for(future, timeout=5)
         except TimeoutError:

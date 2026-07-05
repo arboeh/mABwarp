@@ -10,6 +10,7 @@ from typing import Any
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -151,12 +152,17 @@ def _discover_solar_planes(
             future.set_result([])
 
     async def _discover_solar_planes():
-        unsub = await async_subscribe(
-            hass,
-            TOPIC_SOLAR_FORECAST_PLANES_LIST.format(prefix=topic_prefix),
-            _planes_list_received,
-            0,
-        )
+        try:
+            unsub = await async_subscribe(
+                hass,
+                TOPIC_SOLAR_FORECAST_PLANES_LIST.format(prefix=topic_prefix),
+                _planes_list_received,
+                0,
+            )
+        except HomeAssistantError as err:
+            _LOGGER.warning("Failed to subscribe for solar plane discovery: %s", err)
+            return
+
         try:
             plane_indices = await asyncio.wait_for(future, timeout=3)
         except TimeoutError:
@@ -184,12 +190,17 @@ def _discover_solar_planes(
 
                     return _plane_received
 
-                unsub2 = await async_subscribe(
-                    hass,
-                    TOPIC_SOLAR_FORECAST_PLANES_STATE.format(prefix=topic_prefix, idx=idx),
-                    _make_callback(fut, idx),
-                    0,
-                )
+                try:
+                    unsub2 = await async_subscribe(
+                        hass,
+                        TOPIC_SOLAR_FORECAST_PLANES_STATE.format(prefix=topic_prefix, idx=idx),
+                        _make_callback(fut, idx),
+                        0,
+                    )
+                except HomeAssistantError as err:
+                    _LOGGER.warning("Failed to subscribe for solar plane discovery: %s", err)
+                    continue
+
                 try:
                     result = await asyncio.wait_for(fut, timeout=0.5)
                     if result is not None:
