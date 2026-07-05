@@ -1,5 +1,18 @@
 {
   "evenBetterToml.schema.associations": {
     "pyproject.toml": "https://json.schemastore.org/pyproject.json"
+  },
+  "files.exclude": {
+    "__pycache__": true,
+    ".history": true,
+    ".mypy_cache": true,
+    ".pytest_cache": true,
+    ".ruff_cache": true,
+    ".venv": true,
+    "mabwarp.egg-info": true,
+    ".coverage": true,
+    "pytestdebug.log": true,
+    "uv.lock": true,
+    "custom_components/mabwarp/__pycache__": true
   }
 }

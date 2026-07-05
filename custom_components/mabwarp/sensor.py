@@ -412,7 +412,7 @@ async def async_setup_entry(
                 None,
                 coordinator,
             ),
-# MabwarpAllocatedCurrentSensor replaces the deprecated Allocated Current.
+            # MabwarpAllocatedCurrentSensor replaces the deprecated Allocated Current.
             # Field name corrected from allocated_current to alloc[idx] on 2026-07-04,
             # verified via mosquitto_sub. The alloc array contains 4 elements representing
             # allocation slots for up to 4 chargers. Unit (mA vs A) still unverified -
