@@ -140,6 +140,8 @@ def _discover_solar_planes(
     future = asyncio.get_event_loop().create_future()
 
     def _planes_list_received(msg: ReceiveMessage) -> None:
+        if future.done():
+            return
         try:
             payload = msg.payload
             if isinstance(payload, bytes):
@@ -150,7 +152,8 @@ def _discover_solar_planes(
             else:
                 future.set_result([])
         except (json.JSONDecodeError, TypeError, ValueError):
-            future.set_result([])
+            if not future.done():
+                future.set_result([])
 
     async def _discover_solar_planes():
         try:
@@ -177,6 +180,8 @@ def _discover_solar_planes(
 
                 def _make_callback(f, i):
                     def _plane_received(msg: ReceiveMessage) -> None:
+                        if f.done():
+                            return
                         try:
                             payload = msg.payload
                             if isinstance(payload, bytes):
@@ -187,7 +192,8 @@ def _discover_solar_planes(
                             else:
                                 f.set_result(None)
                         except (json.JSONDecodeError, TypeError, ValueError):
-                            f.set_result(None)
+                            if not f.done():
+                                f.set_result(None)
 
                     return _plane_received
 

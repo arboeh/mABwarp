@@ -132,6 +132,6 @@ def test_wifi_signal_strength_sensor_handles_null():
             pass
 
     msg = MagicMock()
-    msg.payload = b'{}'
+    msg.payload = b"{}"
     message_received(msg)
     assert sensor._attr_native_value is None
