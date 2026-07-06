@@ -166,7 +166,7 @@ class MabwarpMqttSensor(SensorEntity):
                 index = self._coordinator.get_index(self._field_path)
                 if index is not None:
                     return data[index]
-                return "unknown"
+                return None
             return data[int(self._field_path)]
         keys = self._field_path.split(".")
         value: Any = data

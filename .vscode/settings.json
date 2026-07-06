@@ -13,6 +13,8 @@
     ".coverage": true,
     "pytestdebug.log": true,
     "uv.lock": true,
-    "custom_components/mabwarp/__pycache__": true
+    "custom_components/mabwarp/__pycache__": true,
+    ".vscode": true,
+    "tests/__pycache__": true
   }
 }
