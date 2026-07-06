@@ -49,11 +49,22 @@ class MeterValueCoordinator:
 
     def update_value_ids_mapping(self, value_ids: list) -> None:
         self._value_ids_mapping = {str(vid): idx for idx, vid in enumerate(value_ids)}
+        _LOGGER.debug("Received value_ids mapping: %s", value_ids)
 
     def get_index(self, meter_value_id: str) -> int | None:
         return self._value_ids_mapping.get(meter_value_id)
 
     def store_values(self, values: list) -> None:
+        _LOGGER.debug(
+            "store_values: received %d values, mapping has %d entries", len(values), len(self._value_ids_mapping or [])
+        )
+        if self._value_ids_mapping and len(values) != len(self._value_ids_mapping):
+            _LOGGER.warning(
+                "Meter values array length (%d) does not match value_ids "
+                "mapping length (%d) — some sensors will show unknown",
+                len(values),
+                len(self._value_ids_mapping),
+            )
         self._values_data = {str(vid): val for vid, val in enumerate(values) if str(vid) in self._value_ids_mapping}
 
     def set_unsubscribe_callbacks(self, unsubscribe_value_ids, unsubscribe_values) -> None:

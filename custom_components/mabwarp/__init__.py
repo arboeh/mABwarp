@@ -18,6 +18,7 @@ PLATFORMS = ["sensor", "switch", "number", "button", "binary_sensor", "select"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up mABwarp from a config entry."""
+    _LOGGER.debug("Setting up mABwarp entry %s", entry.entry_id)
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data
 

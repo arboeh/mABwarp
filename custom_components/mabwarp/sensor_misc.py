@@ -37,6 +37,7 @@ class MabwarpFeaturesSensor(SensorEntity):
     """Sensor that reports the number of detected features."""
 
     _attr_icon = "mdi:format-list-checks"
+    _attr_name = "Supported Features"
     _attr_native_value = 0
 
     def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
