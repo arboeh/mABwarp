@@ -7,6 +7,7 @@ import json
 import logging
 from typing import Any
 
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -50,18 +51,18 @@ class MabwarpLastChargeSensor(SensorEntity):
 
     _attr_icon = "mdi:ev-station"
     _attr_native_value = None
-    _attr_extra_state_attributes: dict[str, Any] = {}
 
     def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
         """Initialize the last charge sensor."""
         self._config_entry = config_entry
         self._topic = TOPIC_CHARGE_TRACKER_LAST.format(prefix=topic_prefix)
         self._unsubscribe = None
+        self._attr_extra_state_attributes: dict[str, Any] = {}
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
 
-        def message_received(msg) -> None:
+        def message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if isinstance(payload, bytes):

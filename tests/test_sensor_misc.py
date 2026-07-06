@@ -23,6 +23,7 @@ from custom_components.mabwarp.sensor_misc import (
     MabwarpP14aEnwgMaxPowerSensor,
     MabwarpP14aEnwgThrottledBinarySensor,
     MabwarpTemperatureSensor,
+    _discover_temperature_keys,
 )
 from tests.conftest import make_mock_hass
 
@@ -168,3 +169,22 @@ def test_p14a_enwg_max_power_sensor_parses_max_power():
     entry = _make_mock_entry(features=["p14a_enwg"])
     sensor = MabwarpP14aEnwgMaxPowerSensor(entry, DEFAULT_TOPIC_PREFIX)
     assert sensor.extract_field({"max_power": 4200}) == 4200
+
+
+def test_temperature_key_discovery_double_message_no_invalid_state_error():
+    """Test that receiving two MQTT messages does not raise InvalidStateError."""
+    hass = make_mock_hass()
+    entry = _make_mock_entry(features=["temperatures"])
+
+    def mock_async_subscribe(hass, topic, callback, qos):
+        callback(MagicMock(payload=b'{"current": 42, "min": 10}'))
+        callback(MagicMock(payload=b'{"current": 42, "min": 10, "max": 50}'))
+        return lambda: None
+
+    async def run_test():
+        with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+            with patch("custom_components.mabwarp.sensor_misc.async_subscribe", side_effect=mock_async_subscribe):
+                await async_setup_entry(hass, entry, lambda entities: None)
+        await asyncio.sleep(0)
+
+    asyncio.run(run_test())

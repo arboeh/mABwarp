@@ -82,7 +82,7 @@ def test_day_ahead_price_sensor_converts_current_price():
             payload = payload.decode("utf-8")
         data = json.loads(payload)
         value = data.get("current_price")
-        if value is not None and isinstance(value, (int, float)) and sensor._conversion_factor is not None:
+        if value is not None and isinstance(value, int | float) and sensor._conversion_factor is not None:
             value = value * sensor._conversion_factor
         sensor._attr_native_value = value
         sensor.async_write_ha_state()
@@ -109,7 +109,7 @@ def test_day_ahead_price_sensor_handles_null():
                 payload = payload.decode("utf-8")
             data = json.loads(payload)
             value = data.get("current_price")
-            if value is not None and isinstance(value, (int, float)) and sensor._conversion_factor is not None:
+            if value is not None and isinstance(value, int | float) and sensor._conversion_factor is not None:
                 value = value * sensor._conversion_factor
             sensor._attr_native_value = value
             sensor.async_write_ha_state()
@@ -117,7 +117,7 @@ def test_day_ahead_price_sensor_handles_null():
             pass
 
     msg = MagicMock()
-    msg.payload = b'{}'
+    msg.payload = b"{}"
     message_received(msg)
     assert sensor._attr_native_value is None
 
@@ -135,7 +135,7 @@ def test_day_ahead_price_sensor_handles_invalid_json():
                 payload = payload.decode("utf-8")
             data = json.loads(payload)
             value = data.get("current_price")
-            if value is not None and isinstance(value, (int, float)) and sensor._conversion_factor is not None:
+            if value is not None and isinstance(value, int | float) and sensor._conversion_factor is not None:
                 value = value * sensor._conversion_factor
             sensor._attr_native_value = value
             sensor.async_write_ha_state()
@@ -143,7 +143,7 @@ def test_day_ahead_price_sensor_handles_invalid_json():
             pass
 
     msg = MagicMock()
-    msg.payload = b'not json'
+    msg.payload = b"not json"
     message_received(msg)
     assert sensor._attr_native_value is None
 
@@ -162,7 +162,7 @@ def test_day_ahead_prices_forecast_sensor_parses_prices():
         prices = data.get("prices")
         if isinstance(prices, list) and len(prices) > 0:
             first_price = prices[0]
-            if isinstance(first_price, (int, float)):
+            if isinstance(first_price, int | float):
                 sensor._attr_native_value = first_price * 0.0001
             else:
                 sensor._attr_native_value = None
@@ -198,7 +198,7 @@ def test_day_ahead_prices_forecast_sensor_handles_empty_array():
         prices = data.get("prices")
         if isinstance(prices, list) and len(prices) > 0:
             first_price = prices[0]
-            if isinstance(first_price, (int, float)):
+            if isinstance(first_price, int | float):
                 sensor._attr_native_value = first_price * 0.0001
             else:
                 sensor._attr_native_value = None
@@ -233,7 +233,7 @@ def test_day_ahead_prices_forecast_sensor_handles_invalid_json():
             prices = data.get("prices")
             if isinstance(prices, list) and len(prices) > 0:
                 first_price = prices[0]
-                if isinstance(first_price, (int, float)):
+                if isinstance(first_price, int | float):
                     sensor._attr_native_value = first_price * 0.0001
                 else:
                     sensor._attr_native_value = None
@@ -249,6 +249,6 @@ def test_day_ahead_prices_forecast_sensor_handles_invalid_json():
             pass
 
     msg = MagicMock()
-    msg.payload = b'not json'
+    msg.payload = b"not json"
     message_received(msg)
     assert sensor._attr_native_value is None

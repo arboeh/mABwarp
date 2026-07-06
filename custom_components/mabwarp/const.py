@@ -56,10 +56,15 @@ TOPIC_TEMPERATURES_STATE = "{prefix}/temperatures/state"
 # P14A ENWG
 TOPIC_P14A_ENWG_STATE = "{prefix}/p14a_enwg/state"
 
+# Network Diagnostics
+TOPIC_WIFI_STATE = "{prefix}/wifi/state"
+TOPIC_ETHERNET_STATE = "{prefix}/ethernet/state"
+
 # Day Ahead Prices
 TOPIC_DAY_AHEAD_PRICES_STATE = "{prefix}/day_ahead_prices/state"
 TOPIC_DAY_AHEAD_PRICES_PRICES = "{prefix}/day_ahead_prices/prices"
 TOPIC_DAY_AHEAD_PRICES_CONFIG = "{prefix}/day_ahead_prices/config"
+DAY_AHEAD_PRICE_SCALE_FACTOR = 0.0001
 
 # Meter Value IDs from WARP3 value_ids list
 METER_VALUE_ID_VOLTAGE_L1 = "13"

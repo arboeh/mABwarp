@@ -16,7 +16,7 @@ from custom_components.mabwarp.const import (
     TOPIC_EVSE_STATE,
     TOPIC_METER_VALUES,
 )
-from custom_components.mabwarp.sensor_base import MabwarpMqttSensor
+from custom_components.mabwarp.sensor_base import MabwarpMqttSensor, MeterValueCoordinator
 
 
 def test_sensor_unique_id():
@@ -444,3 +444,13 @@ def test_extract_field_meter_array_returns_none_no_valueerror():
     result = sensor.extract_field(meter_data)
     assert result is None
     assert not isinstance(result, str)
+
+
+def test_set_unsubscribe_callbacks_sets_both_attributes():
+    """Test set_unsubscribe_callbacks stores both unsubscribe callbacks."""
+    coordinator = MeterValueCoordinator(MagicMock())
+    unsub_ids = lambda: None
+    unsub_vals = lambda: None
+    coordinator.set_unsubscribe_callbacks(unsub_ids, unsub_vals)
+    assert coordinator._unsubscribe_value_ids is unsub_ids
+    assert coordinator._unsubscribe_values is unsub_vals

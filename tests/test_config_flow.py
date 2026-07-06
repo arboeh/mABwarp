@@ -15,7 +15,7 @@ class MockConfigEntry:
 
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.mabwarp.config_flow import MabwarpConfigFlow, MabwarpOptionsFlowHandler
+from custom_components.mabwarp.config_flow import MabwarpConfigFlow, MabwarpOptionsFlowHandler, _detect_features
 from custom_components.mabwarp.const import (
     CONF_DEVICE_ID,
     CONF_FEATURES,
@@ -198,3 +198,18 @@ def test_options_flow_redetects_features_and_reloads():
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert entry.data[CONF_FEATURES] == ["evse", "meters", "nfc"]
     hass.config_entries.async_reload.assert_called_once_with("test_entry_id")
+
+
+def test_features_double_message_no_invalid_state_error():
+    """Test that receiving two MQTT messages does not raise InvalidStateError."""
+    hass = _make_mock_hass(has_mqtt=True)
+
+    def mock_async_subscribe(hass, topic, callback, qos):
+        callback(_mock_msg(b'["evse","meters"]'))
+        callback(_mock_msg(b'["nfc","evse"]'))
+        return lambda: None
+
+    with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
+        result = asyncio.get_event_loop().run_until_complete(_detect_features(hass, "warp"))
+
+    assert result == ["evse", "meters"]

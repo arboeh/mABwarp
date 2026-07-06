@@ -6,6 +6,7 @@ import json
 import logging
 
 from homeassistant.components.mqtt.client import async_publish, async_subscribe
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -54,7 +55,7 @@ class MabwarpChargeModeSelect(SelectEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
 
-        def message_received(msg) -> None:
+        def message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if isinstance(payload, bytes):
@@ -63,7 +64,7 @@ class MabwarpChargeModeSelect(SelectEntity):
                 mode = data.get("mode")
                 if mode is not None:
                     self._attr_current_option = CHARGE_MODE_MAP.get(int(mode))
-                self.async_write_ha_state()
+                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (
                 json.JSONDecodeError,
                 KeyError,

@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from homeassistant.components.mqtt.client import async_publish, async_subscribe
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -53,7 +54,7 @@ class MabwarpUserEnabledSwitch(SwitchEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
 
-        def message_received(msg) -> None:
+        def message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if isinstance(payload, bytes):

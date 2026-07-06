@@ -44,6 +44,12 @@ Bridges Tinkerforge WARP Charger MQTT topics to Home Assistant – the Auto Disc
 - Current day ahead price (ct/kWh)
 - Price forecast array with extra state attributes
 
+### Netzwerk-Diagnose (WiFi/Ethernet)
+- WiFi signal strength (RSSI, dBm)
+- WiFi IP address
+- WiFi connection state
+- Ethernet link speed (Mbit/s, nur bei vorhandenem Ethernet-Feature)
+- Ethernet IP address (nur bei vorhandenem Ethernet-Feature)
+
 ## TODO
-- network/wifi Diagnose-Sensoren (Signalstärke, Verbindungsstatus) — geplant für spätere Version.
 - Energy-Dashboard-Support

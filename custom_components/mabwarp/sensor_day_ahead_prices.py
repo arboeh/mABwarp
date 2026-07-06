@@ -6,6 +6,7 @@ import json
 import logging
 from typing import Any
 
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -13,6 +14,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from .const import (
     CONF_DEVICE_ID,
     CONF_WARP_VERSION,
+    DAY_AHEAD_PRICE_SCALE_FACTOR,
     DOMAIN,
     TOPIC_DAY_AHEAD_PRICES_CONFIG,
     TOPIC_DAY_AHEAD_PRICES_PRICES,
@@ -37,7 +39,7 @@ class MabwarpDayAheadPriceSensor(MabwarpMqttSensor):
             None,
             SensorStateClass.MEASUREMENT,
             coordinator=None,
-            conversion_factor=0.0001,
+            conversion_factor=DAY_AHEAD_PRICE_SCALE_FACTOR,
         )
 
 
@@ -46,18 +48,18 @@ class MabwarpDayAheadPricesForecastSensor(SensorEntity):
 
     _attr_icon = "mdi:chart-line"
     _attr_native_value = None
-    _attr_extra_state_attributes: dict[str, Any] = {}
 
     def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
         """Initialize the forecast sensor."""
         self._config_entry = config_entry
         self._topic = TOPIC_DAY_AHEAD_PRICES_PRICES.format(prefix=topic_prefix)
         self._unsubscribe = None
+        self._attr_extra_state_attributes: dict[str, Any] = {}
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
 
-        def message_received(msg) -> None:
+        def message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if isinstance(payload, bytes):
@@ -66,8 +68,8 @@ class MabwarpDayAheadPricesForecastSensor(SensorEntity):
                 prices = data.get("prices")
                 if isinstance(prices, list) and len(prices) > 0:
                     first_price = prices[0]
-                    if isinstance(first_price, (int, float)):
-                        self._attr_native_value = first_price * 0.0001
+                    if isinstance(first_price, int | float):
+                        self._attr_native_value = first_price * DAY_AHEAD_PRICE_SCALE_FACTOR
                     else:
                         self._attr_native_value = None
                 else:

@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from homeassistant.components.mqtt.client import async_subscribe
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -54,6 +55,11 @@ class MeterValueCoordinator:
 
     def store_values(self, values: list) -> None:
         self._values_data = {str(vid): val for vid, val in enumerate(values) if str(vid) in self._value_ids_mapping}
+
+    def set_unsubscribe_callbacks(self, unsubscribe_value_ids, unsubscribe_values) -> None:
+        """Store MQTT unsubscribe callbacks for later cleanup."""
+        self._unsubscribe_value_ids = unsubscribe_value_ids
+        self._unsubscribe_values = unsubscribe_values
 
 
 def check_plausibility(coordinator: MeterValueCoordinator) -> None:
@@ -131,7 +137,7 @@ class MabwarpMqttSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
 
-        def message_received(msg) -> None:
+        def message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if isinstance(payload, bytes):

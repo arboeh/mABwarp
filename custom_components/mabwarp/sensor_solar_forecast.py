@@ -7,6 +7,7 @@ import json
 import logging
 from typing import Any
 
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -70,7 +71,6 @@ class MabwarpSolarPlaneConfigSensor(SensorEntity):
     """Sensor for a single solar plane's config (name, wp)."""
 
     _attr_native_value = None
-    _attr_extra_state_attributes: dict[str, Any] = {}
 
     def __init__(self, config_entry: ConfigEntry, topic_prefix: str, plane_idx: int) -> None:
         """Initialize the sensor."""
@@ -78,11 +78,12 @@ class MabwarpSolarPlaneConfigSensor(SensorEntity):
         self._topic = TOPIC_SOLAR_FORECAST_PLANES_CONFIG.format(prefix=topic_prefix, idx=plane_idx)
         self._unsubscribe = None
         self._plane_idx = plane_idx
+        self._attr_extra_state_attributes: dict[str, Any] = {}
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
 
-        def message_received(msg) -> None:
+        def message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if isinstance(payload, bytes):
@@ -138,7 +139,7 @@ def _discover_solar_planes(
     """Discover solar plane entities dynamically."""
     future = asyncio.get_event_loop().create_future()
 
-    def _planes_list_received(msg) -> None:
+    def _planes_list_received(msg: ReceiveMessage) -> None:
         try:
             payload = msg.payload
             if isinstance(payload, bytes):
@@ -175,7 +176,7 @@ def _discover_solar_planes(
                 fut = asyncio.get_event_loop().create_future()
 
                 def _make_callback(f, i):
-                    def _plane_received(msg) -> None:
+                    def _plane_received(msg: ReceiveMessage) -> None:
                         try:
                             payload = msg.payload
                             if isinstance(payload, bytes):

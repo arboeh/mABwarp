@@ -6,6 +6,7 @@ import json
 import logging
 
 from homeassistant.components.mqtt.client import async_publish, async_subscribe
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -64,7 +65,7 @@ class MabwarpChargingCurrentNumber(NumberEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
 
-        def message_received(msg) -> None:
+        def message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if isinstance(payload, bytes):
@@ -140,7 +141,7 @@ class MabwarpChargeLimitsDurationNumber(NumberEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
 
-        def message_received(msg) -> None:
+        def message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if isinstance(payload, bytes):
@@ -216,7 +217,7 @@ class MabwarpChargeLimitsEnergyNumber(NumberEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
 
-        def message_received(msg) -> None:
+        def message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if isinstance(payload, bytes):

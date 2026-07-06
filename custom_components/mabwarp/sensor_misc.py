@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -37,13 +38,13 @@ class MabwarpFeaturesSensor(SensorEntity):
 
     _attr_icon = "mdi:format-list-checks"
     _attr_native_value = 0
-    _attr_extra_state_attributes: dict[str, Any] = {}
 
     def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
         """Initialize the features sensor."""
         self._config_entry = config_entry
         self._topic = TOPIC_INFO_FEATURES.format(prefix=topic_prefix)
         self._unsubscribe = None
+        self._attr_extra_state_attributes: dict[str, Any] = {}
 
         features = config_entry.data.get("features", [])
         self._attr_native_value = len(features)
@@ -52,7 +53,7 @@ class MabwarpFeaturesSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
 
-        def message_received(msg) -> None:
+        def message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if isinstance(payload, bytes):
@@ -131,7 +132,7 @@ class MabwarpP14aEnwgThrottledBinarySensor(BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
 
-        def message_received(msg) -> None:
+        def message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = msg.payload
                 if isinstance(payload, bytes):
@@ -202,7 +203,9 @@ def _discover_temperature_keys(
     future = asyncio.get_event_loop().create_future()
     discovered_keys = set()
 
-    def _temp_message_received(msg) -> None:
+    def _temp_message_received(msg: ReceiveMessage) -> None:
+        if future.done():
+            return
         try:
             payload = msg.payload
             if isinstance(payload, bytes):
@@ -215,7 +218,8 @@ def _discover_temperature_keys(
                 else:
                     future.set_result([])
         except (json.JSONDecodeError, TypeError, ValueError):
-            future.set_result([])
+            if not future.done():
+                future.set_result([])
 
     async def _discover_temperature_keys():
         try:

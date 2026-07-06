@@ -9,6 +9,7 @@ import logging
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.mqtt.client import async_subscribe
+from homeassistant.components.mqtt.models import ReceiveMessage
 
 from .const import (
     CONF_DEVICE_ID,
@@ -38,7 +39,9 @@ async def _detect_features(hass, topic_prefix: str) -> list[str]:
     topic = TOPIC_INFO_FEATURES.format(prefix=topic_prefix)
     future: asyncio.Future[list[str]] = asyncio.get_event_loop().create_future()
 
-    def _features_message_received(msg) -> None:
+    def _features_message_received(msg: ReceiveMessage) -> None:
+        if future.done():
+            return
         try:
             payload = msg.payload
             if isinstance(payload, bytes):
@@ -50,7 +53,8 @@ async def _detect_features(hass, topic_prefix: str) -> list[str]:
                 future.set_result([])
         except (json.JSONDecodeError, TypeError, ValueError) as err:
             _LOGGER.warning("Failed to parse features message: %s", err)
-            future.set_result([])
+            if not future.done():
+                future.set_result([])
 
     unsubscribe = await async_subscribe(hass, topic, _features_message_received, 0)
     try:
