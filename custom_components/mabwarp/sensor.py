@@ -34,6 +34,7 @@ from .const import (
 from .sensor_base import MeterValueCoordinator, check_plausibility
 from .sensor_charge_limits import build_charge_limits_entities
 from .sensor_charge_tracker import build_charge_tracker_entities
+from .sensor_day_ahead_prices import build_day_ahead_prices_entities
 from .sensor_evse import build_evse_entities
 from .sensor_misc import build_misc_entities
 from .sensor_power_manager import build_power_manager_entities
@@ -104,6 +105,7 @@ async def async_setup_entry(
     entities.extend(build_solar_forecast_entities(hass, entry, topic_prefix, features, async_add_entities))
     entities.extend(build_charge_limits_entities(entry, topic_prefix, features))
     entities.extend(build_misc_entities(hass, entry, topic_prefix, features, async_add_entities))
+    entities.extend(build_day_ahead_prices_entities(entry, topic_prefix, features))
 
     unique_ids = [entity.unique_id for entity in entities]
     duplicate_ids = [uid for uid in unique_ids if unique_ids.count(uid) > 1]
