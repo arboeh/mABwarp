@@ -41,7 +41,17 @@ def test_charge_mode_select_options():
         },
     )()
     select = MabwarpChargeModeSelect(mock_config_entry)
-    assert set(select._attr_options) == {"Standby", "Min", "PV", "Min+PV"}
+    assert set(select._attr_options) == {
+        "Schnell",
+        "Aus",
+        "PV",
+        "Min+PV",
+        "Min",
+        "Eco",
+        "Eco+PV",
+        "Eco+Min",
+        "Eco+Min+PV",
+    }
 
 
 def test_charge_mode_select_current_option_from_payload():
@@ -69,7 +79,7 @@ def test_charge_mode_select_current_option_from_payload():
         if mode is not None:
             from custom_components.mabwarp.const import CHARGE_MODE_MAP
 
-            select._attr_current_option = CHARGE_MODE_MAP.get(int(mode))
+            select._attr_current_option = CHARGE_MODE_MAP.get(int(mode), f"Unknown ({mode})")
 
     from unittest.mock import MagicMock
 

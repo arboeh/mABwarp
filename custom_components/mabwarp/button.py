@@ -77,10 +77,10 @@ class MabwarpButtonBase(ButtonEntity):
         await async_publish(
             self.hass,
             self._topic,
-            None,
+            "null",
             qos=0,
             retain=False,
-            encoding=None,
+            encoding="utf-8",
         )
 
     @property

@@ -27,7 +27,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class MabwarpChargeModeSensor(SensorEntity):
-    """Sensor for WARP Power Manager charge mode with text mapping."""
+    """Sensor for WARP Power Manager charge mode with text mapping.
+
+    WARNING: The text mapping is based on an unverified assumption about
+    the WARP web UI and may not exactly match the charger firmware or
+    official documentation. See const.py CHARGE_MODE_MAP for details.
+    """
 
     _attr_icon = "mdi:ev-station"
     _attr_native_value = None

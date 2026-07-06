@@ -1,6 +1,7 @@
 # tests/conftest.py
 
 import asyncio
+import logging
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,6 +15,8 @@ from custom_components.mabwarp.const import (
     DEFAULT_TOPIC_PREFIX,
     DOMAIN,
 )
+
+logging.getLogger("asyncio").setLevel(logging.WARNING)
 
 
 # KRITISCH: Disable pytest-socket BEFORE any fixtures run

@@ -15,6 +15,7 @@
     "uv.lock": true,
     "custom_components/mabwarp/__pycache__": true,
     ".vscode": true,
-    "tests/__pycache__": true
+    "tests/__pycache__": true,
+    ".venv2": true
   }
 }

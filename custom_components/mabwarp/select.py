@@ -41,7 +41,12 @@ async def async_setup_entry(
 
 
 class MabwarpChargeModeSelect(SelectEntity):
-    """Select entity for WARP Power Manager charge mode."""
+    """Select entity for WARP Power Manager charge mode.
+
+    WARNING: The option labels are based on an unverified assumption about
+    the WARP web UI and may not exactly match the charger firmware or
+    official documentation. See const.py CHARGE_MODE_MAP for details.
+    """
 
     _attr_icon = "mdi:ev-station"
 
@@ -63,7 +68,7 @@ class MabwarpChargeModeSelect(SelectEntity):
                 data = json.loads(payload)
                 mode = data.get("mode")
                 if mode is not None:
-                    self._attr_current_option = CHARGE_MODE_MAP.get(int(mode))
+                    self._attr_current_option = CHARGE_MODE_MAP.get(int(mode), f"Unknown ({mode})")
                 self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
             except (
                 json.JSONDecodeError,

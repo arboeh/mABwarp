@@ -88,14 +88,10 @@ class MabwarpUserEnabledSwitch(SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_publish_enabled(True)
-        self._attr_is_on = True
-        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_publish_enabled(False)
-        self._attr_is_on = False
-        self.async_write_ha_state()
 
     @property
     def unique_id(self) -> str:

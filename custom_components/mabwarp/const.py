@@ -88,13 +88,27 @@ METER_VALUE_ID_ENERGY_TOTAL = 213
 # 357-359 - Leistungsfaktor je Phase
 
 # ASSUMPTION: Charge Mode mapping is not yet verified against official
-# WARP documentation or real hardware. 0=Standby, 1=Min, 2=PV, 3=Min+PV
-# is assumed analog to the WARP web interface. TODO: verify before release.
+# WARP documentation or real hardware.
+# Documentation sources:
+#   - Documented modes (0-3): community-verified from Tinkerforge docs and web UI.
+#   - Undocumented modes (5-9): community-sourced, not verified by Tinkerforge.
+# TODO: verify against real hardware before production release.
+# Verification methods:
+#   1. Browser DevTools at real WARP web interface: observe HTTP PUT
+#      payloads to /power_manager/charge_mode when changing modes.
+#   2. mosquitto_sub on $PREFIX/power_manager/charge_mode while setting
+#      each mode in the web interface and log resulting mode values.
 CHARGE_MODE_MAP = {
-    0: "Standby",
-    1: "Min",
+    0: "Schnell",
+    1: "Aus",
     2: "PV",
     3: "Min+PV",
+    # Undocumented modes - community-sourced, not verified by Tinkerforge
+    5: "Min",
+    6: "Eco",
+    7: "Eco+PV",
+    8: "Eco+Min",
+    9: "Eco+Min+PV",
 }
 
 # Config Error Flag bit definitions (ASSUMPTION - verify against real payload)

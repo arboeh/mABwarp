@@ -95,11 +95,11 @@ def test_charge_mode_sensor_maps_mode_to_text():
     msg = MagicMock()
     msg.payload = b'{"mode": 0}'
     message_received(msg)
-    assert sensor._attr_native_value == "Standby"
+    assert sensor._attr_native_value == "Schnell"
 
     msg.payload = b'{"mode": 1}'
     message_received(msg)
-    assert sensor._attr_native_value == "Min"
+    assert sensor._attr_native_value == "Aus"
 
     msg.payload = b'{"mode": 2}'
     message_received(msg)
