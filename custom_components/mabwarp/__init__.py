@@ -8,7 +8,7 @@ import pathlib
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 MANIFEST = json.loads((pathlib.Path(__file__).parent / "manifest.json").read_text(encoding="utf-8"))
 __version__ = MANIFEST["version"]
@@ -18,7 +18,7 @@ PLATFORMS = ["sensor", "switch", "number", "button", "binary_sensor", "select"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up mABwarp from a config entry."""
-    _LOGGER.debug("Setting up mABwarp entry %s", entry.entry_id)
+    LOGGER.debug("Setting up mABwarp entry %s", entry.entry_id)
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = entry.data
 

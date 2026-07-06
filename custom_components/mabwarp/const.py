@@ -1,5 +1,7 @@
 # custom_components/mabwarp/const.py
 
+import logging
+
 DOMAIN = "mabwarp"
 CONF_FEATURES = "features"
 
@@ -101,3 +103,5 @@ CONFIG_ERROR_FLAG_BITS = [
     "config_error_6",
     "config_error_7",
 ]
+
+LOGGER = logging.getLogger(__name__)
