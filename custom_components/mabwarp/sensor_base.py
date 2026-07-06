@@ -52,12 +52,13 @@ class MeterValueCoordinator:
         _LOGGER.debug("Received value_ids mapping: %s", value_ids)
 
     def get_index(self, meter_value_id: str) -> int | None:
-        return self._value_ids_mapping.get(meter_value_id)
+        return self._value_ids_mapping.get(str(meter_value_id))
 
     def store_values(self, values: list) -> None:
         _LOGGER.debug(
             "store_values: received %d values, mapping has %d entries", len(values), len(self._value_ids_mapping or [])
         )
+        _LOGGER.debug("store_values raw payload: %s", values)
         if self._value_ids_mapping and len(values) != len(self._value_ids_mapping):
             _LOGGER.warning(
                 "Meter values array length (%d) does not match value_ids "
@@ -200,7 +201,7 @@ class MabwarpMqttSensor(SensorEntity):
     def unique_id(self) -> str:
         """Return unique ID for this sensor."""
         device_id = self._config_entry.data[CONF_DEVICE_ID]
-        safe_path = self._field_path.replace(".", "_")
+        safe_path = str(self._field_path).replace(".", "_")
         return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_{safe_path}"
 
     @property

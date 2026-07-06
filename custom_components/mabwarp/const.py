@@ -68,18 +68,24 @@ TOPIC_DAY_AHEAD_PRICES_PRICES = "{prefix}/day_ahead_prices/prices"
 TOPIC_DAY_AHEAD_PRICES_CONFIG = "{prefix}/day_ahead_prices/config"
 DAY_AHEAD_PRICE_SCALE_FACTOR = 0.0001
 
-# Meter Value IDs from WARP3 value_ids list
-METER_VALUE_ID_VOLTAGE_L1 = "13"
-METER_VALUE_ID_VOLTAGE_L2 = "14"
-METER_VALUE_ID_VOLTAGE_L3 = "15"
-METER_VALUE_ID_CURRENT_L1 = "16"
-METER_VALUE_ID_CURRENT_L2 = "17"
-METER_VALUE_ID_CURRENT_L3 = "18"
-METER_VALUE_ID_POWER_L1 = "19"
-METER_VALUE_ID_POWER_L2 = "20"
-METER_VALUE_ID_POWER_L3 = "21"
-METER_VALUE_ID_POWER_TOTAL = "30"
-METER_VALUE_ID_ENERGY_TOTAL = "40"
+# Meter Value IDs from official WARP API
+# https://docs.warp-charger.com/de/docs/interfaces/mqtt_http/api_reference/meters/
+METER_VALUE_ID_VOLTAGE_L1 = 1
+METER_VALUE_ID_VOLTAGE_L2 = 2
+METER_VALUE_ID_VOLTAGE_L3 = 3
+METER_VALUE_ID_CURRENT_L1 = 13
+METER_VALUE_ID_CURRENT_L2 = 17
+METER_VALUE_ID_CURRENT_L3 = 21
+METER_VALUE_ID_POWER_L1 = 39
+METER_VALUE_ID_POWER_L2 = 48
+METER_VALUE_ID_POWER_L3 = 57
+METER_VALUE_ID_POWER_TOTAL = 74
+METER_VALUE_ID_ENERGY_TOTAL = 213
+
+# Optional future extensions (Shelly 3EM Pro / additional WARP meter values):
+# 33 - Summe Strom, 154 - Summe Scheinleistung,
+# 209 - Wirkenergie Bezug, 211 - Wirkenergie Einspeisung,
+# 357-359 - Leistungsfaktor je Phase
 
 # ASSUMPTION: Charge Mode mapping is not yet verified against official
 # WARP documentation or real hardware. 0=Standby, 1=Min, 2=PV, 3=Min+PV
