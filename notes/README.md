@@ -61,6 +61,32 @@ Brief explanation of each file and its role:
 ---
 
 
+## METER_VALUE_ID Correction History (Shelly 3EM Pro)
+
+The `METER_VALUE_ID_*` constants in `const.py` were corrected based on the
+official WARP API documentation and verified against Shelly 3EM Pro payloads:
+
+| Sensor                      | WARP Value ID | Notes                        |
+|-----------------------------|---------------|------------------------------|
+| Voltage L1                  | 1             |                              |
+| Voltage L2                  | 2             |                              |
+| Voltage L3                  | 3             |                              |
+| Current L1                  | 13            |                              |
+| Current L2                  | 17            |                              |
+| Current L3                  | 21            |                              |
+| Power L1                    | 39            |                              |
+| Power L2                    | 48            |                              |
+| Power L3                    | 57            |                              |
+| Power total                 | 74            |                              |
+| Energy total                | 213           | TOTAL_INCREASING device class |
+
+Source: https://docs.warp-charger.com/de/docs/interfaces/mqtt_http/api_reference/meters/
+
+Additional optional values (not yet mapped):
+- 33 (Summe Strom), 154 (Summe Scheinleistung), 209/211 (Wirkenergie Bezug/Einspeisung),
+  357-359 (Leistungsfaktor je Phase).
+
+
 ## Adding a New Sensor
 1. Add topic constant to `const.py` if needed
 2. Add the sensor to the appropriate `sensor_*.py` module:

@@ -111,6 +111,15 @@ class MabwarpConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: igno
 class MabwarpOptionsFlowHandler(config_entries.OptionsFlow):
     """Options flow handler for re-detecting features."""
 
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow handler."""
+        self._config_entry = config_entry
+
+    @property
+    def config_entry(self) -> config_entries.ConfigEntry:
+        """Return the config entry."""
+        return self._config_entry
+
     async def async_step_init(self, user_input=None):
         """Handle the options flow step."""
         if user_input is not None:

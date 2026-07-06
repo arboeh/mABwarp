@@ -1,0 +1,12 @@
+name: Config request
+description: Request a new configuration option
+title: "[CONFIG] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What do you want to add?
+      description: A clear description of the configuration option
+    validations:
+      required: true

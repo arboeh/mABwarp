@@ -1,0 +1,5 @@
+[run]
+source = custom_components.mabwarp
+omit =
+    tests/*
+    custom_components/mabwarp/__init__.py

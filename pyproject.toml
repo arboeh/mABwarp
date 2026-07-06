@@ -9,14 +9,14 @@ name = "mabwarp"
 dynamic = ["version"]
 description = "Bridges Tinkerforge WARP Charger MQTT topics to Home Assistant – the Auto Discovery it deserves"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = ["homeassistant>=2024.3.3"]
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "pytest-asyncio",
-    "pytest-cov",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5.0",
     "pytest-socket",
     "pytest-homeassistant-custom-component>=0.13.100",
     "aioresponses",
@@ -53,7 +53,7 @@ log_cli_format = "%(levelname)-8s %(message)s"
 
 [tool.ruff]
 line-length = 120
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 extend-select = ["RUF100"]

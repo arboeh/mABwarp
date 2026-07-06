@@ -184,8 +184,7 @@ def test_options_flow_redetects_features_and_reloads():
 
     hass.config_entries.async_reload = MagicMock(side_effect=_mock_async_reload)
 
-    handler = MabwarpOptionsFlowHandler()
-    handler.config_entry = entry
+    handler = MabwarpOptionsFlowHandler(config_entry=entry)
     handler.hass = hass
 
     def mock_async_subscribe(hass, topic, callback, qos):

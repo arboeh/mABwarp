@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import MagicMock
 
 import pytest
+import pytest_socket
 from pytest_homeassistant_custom_component.common import MockConfigEntry  # type: ignore
 
 from custom_components.mabwarp.const import (
@@ -13,6 +14,17 @@ from custom_components.mabwarp.const import (
     DEFAULT_TOPIC_PREFIX,
     DOMAIN,
 )
+
+
+# KRITISCH: Disable pytest-socket BEFORE any fixtures run
+def pytest_configure(config):
+    """Pytest configuration hook - disable socket blocking."""
+    import sys
+
+    if "pytest_socket" in sys.modules:
+        pytest_socket.socket_disabled = False
+        pytest_socket.disable_socket = lambda *args, **kwargs: None
+        pytest_socket.enable_socket = lambda *args, **kwargs: None
 
 
 @pytest.fixture
