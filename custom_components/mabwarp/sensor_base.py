@@ -15,12 +15,8 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
-    CONF_DEVICE_ID,
-    CONF_WARP_VERSION,
-    DOMAIN,
     METER_VALUE_ID_CURRENT_L1,
     METER_VALUE_ID_CURRENT_L2,
     METER_VALUE_ID_CURRENT_L3,
@@ -33,6 +29,7 @@ from .const import (
     METER_VALUE_ID_VOLTAGE_L2,
     METER_VALUE_ID_VOLTAGE_L3,
 )
+from .entity_base import MabwarpEntityBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,7 +115,7 @@ def check_plausibility(coordinator: MeterValueCoordinator) -> None:
                 )
 
 
-class MabwarpMqttSensor(SensorEntity):
+class MabwarpMqttSensor(MabwarpEntityBase, SensorEntity):
     """MQTT-based sensor for mABwarp integration."""
 
     def __init__(
@@ -169,7 +166,8 @@ class MabwarpMqttSensor(SensorEntity):
                 if self._conversion_factor is not None and isinstance(value, int | float):
                     value = value * self._conversion_factor
                 self._attr_native_value = value
-                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+                self._reset_parse_error_count()
+                self.async_write_ha_state()
             except (
                 json.JSONDecodeError,
                 KeyError,
@@ -177,7 +175,7 @@ class MabwarpMqttSensor(SensorEntity):
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
+                self._handle_parse_error(err, self._topic)
 
         self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
@@ -210,18 +208,5 @@ class MabwarpMqttSensor(SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this sensor."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
         safe_path = str(self._field_path).replace(".", "_")
-        return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_{safe_path}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        warp_version = self._config_entry.data[CONF_WARP_VERSION]
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=f"WARP Charger {device_id}",
-            manufacturer="Tinkerforge GmbH",
-            model=warp_version,
-        )
+        return self._build_unique_id(f"{self._topic.replace('/', '_')}_{safe_path}")

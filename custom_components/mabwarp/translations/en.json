@@ -46,17 +46,17 @@
       "error_state": { "name": "Error State" },
       "cp_pwm_duty_cycle": { "name": "CP PWM Duty Cycle" },
       "uptime": { "name": "Uptime" },
-      "13": { "name": "Voltage L1" },
-      "14": { "name": "Voltage L2" },
-      "15": { "name": "Voltage L3" },
-      "16": { "name": "Current L1" },
-      "17": { "name": "Current L2" },
-      "18": { "name": "Current L3" },
-      "19": { "name": "Power L1" },
-      "20": { "name": "Power L2" },
-      "21": { "name": "Power L3" },
-      "30": { "name": "Power" },
-      "40": { "name": "Energy (total)" },
+      "voltage_l1": { "name": "Voltage L1" },
+      "voltage_l2": { "name": "Voltage L2" },
+      "voltage_l3": { "name": "Voltage L3" },
+      "current_l1": { "name": "Current L1" },
+      "current_l2": { "name": "Current L2" },
+      "current_l3": { "name": "Current L3" },
+      "power_l1": { "name": "Power L1" },
+      "power_l2": { "name": "Power L2" },
+      "power_l3": { "name": "Power L3" },
+      "power_total": { "name": "Power" },
+      "energy_total": { "name": "Energy (total)" },
       "nfc_last_tag": { "name": "NFC Last Tag" },
       "nfc_last_seen": { "name": "NFC Last Seen" },
       "charge_manager_state": { "name": "Charge Manager State" },
@@ -86,7 +86,6 @@
       "charge_limits_start_energy_kwh": { "name": "Charge Limits Start Energy" },
       "charge_limits_target_energy_kwh": { "name": "Charge Limits Target Energy" },
       "temperature_current": { "name": "Temperature Current" },
-      "p14a_enwg_throttled": { "name": "P14A ENWG Throttled" },
       "p14a_enwg_max_power": { "name": "P14A ENWG Max Power" },
       "wifi_signal_strength": { "name": "WiFi Signal Strength" },
       "wifi_ip_address": { "name": "WiFi IP Address" },
@@ -110,7 +109,8 @@
       "restart_charge_limits": { "name": "Restart Charge Limits" }
     },
     "binary_sensor": {
-      "power_manager_is_3phase": { "name": "Power Manager 3-Phase" }
+      "power_manager_is_3phase": { "name": "Power Manager 3-Phase" },
+      "p14a_enwg_throttled": { "name": "P14A ENWG Throttled" }
     },
     "select": {
       "power_manager_charge_mode": { "name": "Power Manager Charge Mode" }

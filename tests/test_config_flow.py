@@ -1,6 +1,7 @@
 # tests/test_config_flow.py
 
 import asyncio
+import logging
 from unittest.mock import MagicMock, patch
 
 
@@ -46,7 +47,7 @@ def test_form_shows_correctly():
     assert result["errors"] == {}
 
 
-def test_empty_device_id_uses_topic_prefix():
+def test_empty_device_id_uses_topic_prefix(caplog):
     """Test that empty device_id uses topic_prefix as fallback."""
     hass = _make_mock_hass(has_mqtt=True)
     flow = MabwarpConfigFlow()
@@ -55,17 +56,26 @@ def test_empty_device_id_uses_topic_prefix():
     def mock_async_subscribe(hass, topic, callback, qos):
         return lambda: None
 
-    with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
-        result = asyncio.get_event_loop().run_until_complete(
-            flow.async_step_user({"topic_prefix": "warp3", "device_id": "", "warp_version": "WARP3"})
-        )
+    original_wait_for = asyncio.wait_for
+    with caplog.at_level(logging.WARNING, logger="custom_components.mabwarp.config_flow"):
+        with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
+            with patch("custom_components.mabwarp.config_flow.asyncio.wait_for") as mock_wait_for:
+
+                async def _fast(future, timeout=5):
+                    return await original_wait_for(future, timeout=0.1)
+
+                mock_wait_for.side_effect = _fast
+                result = asyncio.get_event_loop().run_until_complete(
+                    flow.async_step_user({"topic_prefix": "warp3", "device_id": "", "warp_version": "WARP3"})
+                )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "WARP Charger (warp3)"
     assert result["data"][CONF_DEVICE_ID] == "warp3"
+    assert "Feature detection timed out for warp3" in caplog.text
 
 
-def test_successful_entry_creation():
+def test_successful_entry_creation(caplog):
     """Test successful config entry creation."""
     hass = _make_mock_hass(has_mqtt=True)
     flow = MabwarpConfigFlow()
@@ -74,14 +84,23 @@ def test_successful_entry_creation():
     def mock_async_subscribe(hass, topic, callback, qos):
         return lambda: None
 
-    with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
-        result = asyncio.get_event_loop().run_until_complete(
-            flow.async_step_user({"topic_prefix": "warp", "device_id": "TEST01", "warp_version": "WARP3"})
-        )
+    original_wait_for = asyncio.wait_for
+    with caplog.at_level(logging.WARNING, logger="custom_components.mabwarp.config_flow"):
+        with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
+            with patch("custom_components.mabwarp.config_flow.asyncio.wait_for") as mock_wait_for:
+
+                async def _fast(future, timeout=5):
+                    return await original_wait_for(future, timeout=0.1)
+
+                mock_wait_for.side_effect = _fast
+                result = asyncio.get_event_loop().run_until_complete(
+                    flow.async_step_user({"topic_prefix": "warp", "device_id": "TEST01", "warp_version": "WARP3"})
+                )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "WARP Charger (TEST01)"
     assert result["data"][CONF_DEVICE_ID] == "TEST01"
+    assert "Feature detection timed out for warp" in caplog.text
 
 
 def test_mqtt_not_available_aborts():
@@ -139,7 +158,7 @@ def test_features_detected_and_stored():
     assert result["data"]["features"] == ["evse", "meters", "nfc"]
 
 
-def test_features_timeout_falls_back_to_empty_list():
+def test_features_timeout_falls_back_to_empty_list(caplog):
     """Test that feature timeout falls back to empty list and still creates entry."""
     hass = _make_mock_hass(has_mqtt=True)
     flow = MabwarpConfigFlow()
@@ -148,13 +167,22 @@ def test_features_timeout_falls_back_to_empty_list():
     def mock_async_subscribe(hass, topic, callback, qos):
         return lambda: None
 
-    with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
-        result = asyncio.get_event_loop().run_until_complete(
-            flow.async_step_user({"topic_prefix": "warp", "device_id": "TEST01", "warp_version": "WARP3"})
-        )
+    original_wait_for = asyncio.wait_for
+    with caplog.at_level(logging.WARNING, logger="custom_components.mabwarp.config_flow"):
+        with patch("custom_components.mabwarp.config_flow.async_subscribe", side_effect=mock_async_subscribe):
+            with patch("custom_components.mabwarp.config_flow.asyncio.wait_for") as mock_wait_for:
+
+                async def _fast(future, timeout=5):
+                    return await original_wait_for(future, timeout=0.1)
+
+                mock_wait_for.side_effect = _fast
+                result = asyncio.get_event_loop().run_until_complete(
+                    flow.async_step_user({"topic_prefix": "warp3", "device_id": "TEST01", "warp_version": "WARP3"})
+                )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"]["features"] == []
+    assert "Feature detection timed out for warp3" in caplog.text
 
 
 def test_options_flow_redetects_features_and_reloads():

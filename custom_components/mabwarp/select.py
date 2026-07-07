@@ -10,7 +10,6 @@ from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 # ASSUMPTION: CHARGE_MODE_MAP values are assumed based on typical WARP web UI
@@ -18,13 +17,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 # hardware or official documentation. See const.py for the definition.
 from .const import (
     CHARGE_MODE_MAP,
-    CONF_DEVICE_ID,
     CONF_TOPIC_PREFIX,
-    CONF_WARP_VERSION,
-    DOMAIN,
     TOPIC_POWER_MANAGER_CHARGE_MODE,
     TOPIC_POWER_MANAGER_CHARGE_MODE_UPDATE,
 )
+from .entity_base import MabwarpEntityBase
+from .features import Feature, has_feature
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,11 +34,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up mABwarp selects."""
     features = entry.data.get("features", [])
-    if "power_manager" in features:
+    if has_feature(features, Feature.POWER_MANAGER):
         async_add_entities([MabwarpChargeModeSelect(entry)])
 
 
-class MabwarpChargeModeSelect(SelectEntity):
+class MabwarpChargeModeSelect(MabwarpEntityBase, SelectEntity):
     """Select entity for WARP Power Manager charge mode.
 
     WARNING: The option labels are based on an unverified assumption about
@@ -71,14 +69,15 @@ class MabwarpChargeModeSelect(SelectEntity):
                 mode = data.get("mode")
                 if mode is not None:
                     self._attr_current_option = CHARGE_MODE_MAP.get(int(mode), f"Unknown ({mode})")
-                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+                self._reset_parse_error_count()
+                self.async_write_ha_state()
             except (
                 json.JSONDecodeError,
                 KeyError,
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
+                self._handle_parse_error(err, self._topic)
 
         topic_prefix = self._config_entry.data[CONF_TOPIC_PREFIX]
         self._topic = TOPIC_POWER_MANAGER_CHARGE_MODE.format(prefix=topic_prefix)
@@ -112,17 +111,4 @@ class MabwarpChargeModeSelect(SelectEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this select entity."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        return f"{DOMAIN}_{device_id}_charge_mode"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        warp_version = self._config_entry.data[CONF_WARP_VERSION]
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=f"WARP Charger {device_id}",
-            manufacturer="Tinkerforge GmbH",
-            model=warp_version,
-        )
+        return self._build_unique_id("charge_mode")

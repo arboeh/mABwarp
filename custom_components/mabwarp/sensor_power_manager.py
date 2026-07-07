@@ -9,24 +9,23 @@ from typing import Any
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CHARGE_MODE_MAP,
-    CONF_DEVICE_ID,
-    CONF_WARP_VERSION,
+    CONF_TOPIC_PREFIX,
     CONFIG_ERROR_FLAG_BITS,
-    DOMAIN,
     TOPIC_POWER_MANAGER_CHARGE_MODE,
     TOPIC_POWER_MANAGER_LOW_LEVEL_STATE,
     TOPIC_POWER_MANAGER_STATE,
 )
+from .entity_base import MabwarpEntityBase
 from .sensor_base import MabwarpMqttSensor, async_subscribe
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class MabwarpChargeModeSensor(SensorEntity):
+class MabwarpChargeModeSensor(MabwarpEntityBase, SensorEntity):
     """Sensor for WARP Power Manager charge mode with text mapping.
 
     WARNING: The text mapping is based on an unverified assumption about
@@ -59,14 +58,15 @@ class MabwarpChargeModeSensor(SensorEntity):
                 if mode is not None:
                     self._attr_native_value = CHARGE_MODE_MAP.get(int(mode), f"Unknown ({mode})")
                     self._attr_extra_state_attributes = {"mode": int(mode)}
-                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+                self._reset_parse_error_count()
+                self.async_write_ha_state()
             except (
                 json.JSONDecodeError,
                 KeyError,
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
+                self._handle_parse_error(err, self._topic)
 
         self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
@@ -79,23 +79,10 @@ class MabwarpChargeModeSensor(SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this sensor."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_charge_mode"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        warp_version = self._config_entry.data[CONF_WARP_VERSION]
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=f"WARP Charger {device_id}",
-            manufacturer="Tinkerforge GmbH",
-            model=warp_version,
-        )
+        return self._build_unique_id(f"{self._topic.replace('/', '_')}_charge_mode")
 
 
-class MabwarpConfigErrorFlagsSensor(SensorEntity):
+class MabwarpConfigErrorFlagsSensor(MabwarpEntityBase, SensorEntity):
     """Sensor for WARP Power Manager config error flags with bit decoding."""
 
     _attr_icon = "mdi:alert-circle"
@@ -126,14 +113,15 @@ class MabwarpConfigErrorFlagsSensor(SensorEntity):
                     for idx, flag_name in enumerate(CONFIG_ERROR_FLAG_BITS):
                         decoded[flag_name] = bool(int(flags) & (1 << idx))
                     self._attr_extra_state_attributes = decoded
-                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+                self._reset_parse_error_count()
+                self.async_write_ha_state()
             except (
                 json.JSONDecodeError,
                 KeyError,
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
+                self._handle_parse_error(err, self._topic)
 
         self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
@@ -146,20 +134,7 @@ class MabwarpConfigErrorFlagsSensor(SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this sensor."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_config_error_flags"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        warp_version = self._config_entry.data[CONF_WARP_VERSION]
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=f"WARP Charger {device_id}",
-            manufacturer="Tinkerforge GmbH",
-            model=warp_version,
-        )
+        return self._build_unique_id(f"{self._topic.replace('/', '_')}_config_error_flags")
 
 
 def build_power_manager_entities(entry, topic_prefix: str, features: list) -> list:

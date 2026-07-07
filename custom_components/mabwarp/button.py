@@ -8,18 +8,16 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.components.mqtt.client import async_publish
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_DEVICE_ID,
     CONF_TOPIC_PREFIX,
-    CONF_WARP_VERSION,
-    DOMAIN,
     TOPIC_CHARGE_LIMITS_RESTART,
     TOPIC_EVSE_START,
     TOPIC_EVSE_STOP,
 )
+from .entity_base import MabwarpEntityBase
+from .features import Feature, has_feature
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +46,7 @@ async def async_setup_entry(
         ),
     ]
 
-    if "charge_limits" in features:
+    if has_feature(features, Feature.CHARGE_LIMITS):
         entities.append(
             MabwarpButtonBase(
                 entry,
@@ -61,7 +59,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MabwarpButtonBase(ButtonEntity):
+class MabwarpButtonBase(MabwarpEntityBase, ButtonEntity):
     """Base class for mABwarp MQTT buttons."""
 
     def __init__(self, config_entry: ConfigEntry, translation_key: str, topic: str, icon: str) -> None:
@@ -87,18 +85,4 @@ class MabwarpButtonBase(ButtonEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this button."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        safe_topic = self._topic.replace("/", "_")
-        return f"{DOMAIN}_{device_id}_{safe_topic}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        warp_version = self._config_entry.data[CONF_WARP_VERSION]
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=f"WARP Charger {device_id}",
-            manufacturer="Tinkerforge GmbH",
-            model=warp_version,
-        )
+        return self._build_unique_id(self._topic.replace("/", "_"))

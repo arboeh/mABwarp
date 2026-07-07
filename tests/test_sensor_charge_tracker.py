@@ -100,7 +100,7 @@ def test_last_charge_sensor_uses_latest_entry():
     assert sensor._attr_extra_state_attributes["user_id"] == 3
 
 
-def test_last_charge_sensor_empty_array_no_crash():
+def test_last_charge_sensor_empty_array_no_crash(caplog):
     """Test last charge sensor handles empty array gracefully."""
     entry = _make_mock_entry(features=["charge_tracker"])
     sensor = MabwarpLastChargeSensor(entry, DEFAULT_TOPIC_PREFIX)
@@ -140,9 +140,11 @@ def test_last_charge_sensor_empty_array_no_crash():
         ) as err:
             logging.warning("Failed to parse last_charges message: %s", err)
 
-    message_received(msg)
+    with caplog.at_level(logging.WARNING):
+        message_received(msg)
     assert sensor._attr_native_value is None
     assert sensor._attr_extra_state_attributes == {}
+    assert "Received empty last_charges array" in caplog.text
 
 
 def test_charge_tracker_sensors_skipped_without_feature():
@@ -161,3 +163,35 @@ def test_charge_tracker_sensors_skipped_without_feature():
         assert TOPIC_CHARGE_TRACKER_STATE.format(prefix=DEFAULT_TOPIC_PREFIX) not in topic
         assert TOPIC_CHARGE_TRACKER_CURRENT.format(prefix=DEFAULT_TOPIC_PREFIX) not in topic
         assert TOPIC_CHARGE_TRACKER_LAST.format(prefix=DEFAULT_TOPIC_PREFIX) not in topic
+
+
+def test_last_charge_sensor_unavailable_after_three_parse_errors(caplog):
+    """Test last charge sensor becomes unavailable after 3 consecutive parse errors."""
+    entry = _make_mock_entry(features=["charge_tracker"])
+    sensor = MabwarpLastChargeSensor(entry, DEFAULT_TOPIC_PREFIX)
+    sensor.hass = MagicMock()
+    sensor.hass.loop = MagicMock()
+    sensor.async_write_ha_state = MagicMock()
+
+    captured_callback = None
+
+    async def mock_async_subscribe(hass, topic, callback, qos):
+        nonlocal captured_callback
+        captured_callback = callback
+        return lambda: None
+
+    with patch(
+        "custom_components.mabwarp.sensor_charge_tracker.async_subscribe",
+        side_effect=mock_async_subscribe,
+    ):
+        asyncio.run(sensor.async_added_to_hass())
+
+    assert captured_callback is not None
+    with caplog.at_level(logging.WARNING, logger="custom_components.mabwarp.entity_base"):
+        for _ in range(3):
+            msg = MagicMock()
+            msg.payload = b"not json"
+            captured_callback(msg)
+
+    assert sensor._attr_available is False
+    assert "Failed to parse MQTT message" in caplog.text

@@ -23,6 +23,7 @@ from .const import (
     TOPIC_METER_VALUES,
     TOPIC_NFC_LAST_TAG,
 )
+from .features import Feature, has_feature, has_meters
 from .sensor_base import MabwarpMqttSensor, MeterValueCoordinator, async_subscribe
 
 
@@ -34,10 +35,8 @@ def build_evse_entities(
 ) -> list:
     """Build EVSE-related sensor entities."""
     entities = []
-    has_meters = "meters" in features or not features
-    if "meter" in features and "meters" not in features:
-        has_meters = False
-    has_nfc = "nfc" in features or not features
+    has_meters_value = has_meters(features)
+    has_nfc = has_feature(features, Feature.NFC) or not features
 
     entities.extend(
         [
@@ -116,7 +115,7 @@ def build_evse_entities(
         ]
     )
 
-    if has_meters:
+    if has_meters_value:
         entities.extend(
             [
                 MabwarpMqttSensor(
@@ -128,7 +127,7 @@ def build_evse_entities(
                     SensorDeviceClass.VOLTAGE,
                     None,
                     coordinator,
-                    translation_key=METER_VALUE_ID_VOLTAGE_L1,
+                    translation_key="voltage_l1",
                 ),
                 MabwarpMqttSensor(
                     entry,
@@ -139,7 +138,7 @@ def build_evse_entities(
                     SensorDeviceClass.VOLTAGE,
                     None,
                     coordinator,
-                    translation_key=METER_VALUE_ID_VOLTAGE_L2,
+                    translation_key="voltage_l2",
                 ),
                 MabwarpMqttSensor(
                     entry,
@@ -150,7 +149,7 @@ def build_evse_entities(
                     SensorDeviceClass.VOLTAGE,
                     None,
                     coordinator,
-                    translation_key=METER_VALUE_ID_VOLTAGE_L3,
+                    translation_key="voltage_l3",
                 ),
                 MabwarpMqttSensor(
                     entry,
@@ -161,7 +160,7 @@ def build_evse_entities(
                     SensorDeviceClass.CURRENT,
                     None,
                     coordinator,
-                    translation_key=METER_VALUE_ID_CURRENT_L1,
+                    translation_key="current_l1",
                 ),
                 MabwarpMqttSensor(
                     entry,
@@ -172,7 +171,7 @@ def build_evse_entities(
                     SensorDeviceClass.CURRENT,
                     None,
                     coordinator,
-                    translation_key=METER_VALUE_ID_CURRENT_L2,
+                    translation_key="current_l2",
                 ),
                 MabwarpMqttSensor(
                     entry,
@@ -183,7 +182,7 @@ def build_evse_entities(
                     SensorDeviceClass.CURRENT,
                     None,
                     coordinator,
-                    translation_key=METER_VALUE_ID_CURRENT_L3,
+                    translation_key="current_l3",
                 ),
                 MabwarpMqttSensor(
                     entry,
@@ -194,7 +193,7 @@ def build_evse_entities(
                     SensorDeviceClass.POWER,
                     None,
                     coordinator,
-                    translation_key=METER_VALUE_ID_POWER_L1,
+                    translation_key="power_l1",
                 ),
                 MabwarpMqttSensor(
                     entry,
@@ -205,7 +204,7 @@ def build_evse_entities(
                     SensorDeviceClass.POWER,
                     None,
                     coordinator,
-                    translation_key=METER_VALUE_ID_POWER_L2,
+                    translation_key="power_l2",
                 ),
                 MabwarpMqttSensor(
                     entry,
@@ -216,7 +215,7 @@ def build_evse_entities(
                     SensorDeviceClass.POWER,
                     None,
                     coordinator,
-                    translation_key=METER_VALUE_ID_POWER_L3,
+                    translation_key="power_l3",
                 ),
                 MabwarpMqttSensor(
                     entry,
@@ -227,7 +226,7 @@ def build_evse_entities(
                     SensorDeviceClass.POWER,
                     None,
                     coordinator,
-                    translation_key=METER_VALUE_ID_POWER_TOTAL,
+                    translation_key="power_total",
                 ),
                 MabwarpMqttSensor(
                     entry,
@@ -238,7 +237,7 @@ def build_evse_entities(
                     SensorDeviceClass.ENERGY,
                     SensorStateClass.TOTAL_INCREASING,
                     coordinator,
-                    translation_key=METER_VALUE_ID_ENERGY_TOTAL,
+                    translation_key="energy_total",
                 ),
             ]
         )

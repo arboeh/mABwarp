@@ -13,13 +13,10 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_DEVICE_ID,
-    CONF_WARP_VERSION,
-    DOMAIN,
+    CONF_TOPIC_PREFIX,
     TOPIC_CHARGE_MANAGER,
     TOPIC_INFO_DISPLAY_NAME,
     TOPIC_INFO_FEATURES,
@@ -28,12 +25,13 @@ from .const import (
     TOPIC_P14A_ENWG_STATE,
     TOPIC_TEMPERATURES_STATE,
 )
+from .entity_base import MabwarpEntityBase
 from .sensor_base import MabwarpMqttSensor, async_subscribe
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class MabwarpFeaturesSensor(SensorEntity):
+class MabwarpFeaturesSensor(MabwarpEntityBase, SensorEntity):
     """Sensor that reports the number of detected features."""
 
     _attr_icon = "mdi:format-list-checks"
@@ -67,13 +65,14 @@ class MabwarpFeaturesSensor(SensorEntity):
                 else:
                     self._attr_native_value = 0
                     self._attr_extra_state_attributes = {"features": []}
-                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+                self._reset_parse_error_count()
+                self.async_write_ha_state()
             except (
                 json.JSONDecodeError,
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning("Failed to parse features message: %s", err)
+                self._handle_parse_error(err, self._topic)
 
         self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
@@ -86,20 +85,7 @@ class MabwarpFeaturesSensor(SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this sensor."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_features"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        warp_version = self._config_entry.data[CONF_WARP_VERSION]
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=f"WARP Charger {device_id}",
-            manufacturer="Tinkerforge GmbH",
-            model=warp_version,
-        )
+        return self._build_unique_id(f"{self._topic.replace('/', '_')}_features")
 
 
 class MabwarpTemperatureSensor(MabwarpMqttSensor):
@@ -127,7 +113,7 @@ class MabwarpTemperatureSensor(MabwarpMqttSensor):
         )
 
 
-class MabwarpP14aEnwgThrottledBinarySensor(BinarySensorEntity):
+class MabwarpP14aEnwgThrottledBinarySensor(MabwarpEntityBase, BinarySensorEntity):
     """Binary sensor for P14A ENWG throttling status."""
 
     _attr_icon = "mdi:speedometer"
@@ -151,14 +137,15 @@ class MabwarpP14aEnwgThrottledBinarySensor(BinarySensorEntity):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
                 self._attr_is_on = bool(data.get("throttled", False))
-                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+                self._reset_parse_error_count()
+                self.async_write_ha_state()
             except (
                 json.JSONDecodeError,
                 KeyError,
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
+                self._handle_parse_error(err, self._topic)
 
         self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
@@ -171,20 +158,7 @@ class MabwarpP14aEnwgThrottledBinarySensor(BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this binary sensor."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        return f"{DOMAIN}_{device_id}_p14a_enwg_throttled"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        warp_version = self._config_entry.data[CONF_WARP_VERSION]
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=f"WARP Charger {device_id}",
-            manufacturer="Tinkerforge GmbH",
-            model=warp_version,
-        )
+        return self._build_unique_id("p14a_enwg_throttled")
 
 
 class MabwarpP14aEnwgMaxPowerSensor(MabwarpMqttSensor):

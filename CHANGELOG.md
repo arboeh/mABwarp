@@ -20,4 +20,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Energy total: 213
 
 ### Security
-- Updated minimum Home Assistant version to 2026.3.0 to support local brand assets
+- Minimum Home Assistant version is 2026.3.0: the integration ships local
+  brand assets in `brand/`, which require HA 2026.3+. All Python APIs used
+  (`async_subscribe`, `async_publish`, entity base classes, `DeviceInfo`,
+  `ConfigEntry`) are available in 2026.3.0 and do not require a newer release.

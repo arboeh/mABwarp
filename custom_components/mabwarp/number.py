@@ -10,19 +10,17 @@ from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_DEVICE_ID,
     CONF_TOPIC_PREFIX,
-    CONF_WARP_VERSION,
-    DOMAIN,
     TOPIC_CHARGE_LIMITS_DEFAULT_LIMITS,
     TOPIC_CHARGE_LIMITS_DEFAULT_LIMITS_UPDATE,
     TOPIC_EVSE_EXT_CURRENT,
     TOPIC_EVSE_SET_EXT_CURRENT,
 )
+from .entity_base import MabwarpEntityBase
+from .features import Feature, has_feature
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +33,7 @@ async def async_setup_entry(
     """Set up mABwarp numbers."""
     entities = [MabwarpChargingCurrentNumber(entry)]
     features = entry.data.get("features", [])
-    if "charge_limits" in features:
+    if has_feature(features, Feature.CHARGE_LIMITS):
         entities.extend(
             [
                 MabwarpChargeLimitsDurationNumber(entry),
@@ -45,7 +43,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MabwarpChargingCurrentNumber(NumberEntity):
+class MabwarpChargingCurrentNumber(MabwarpEntityBase, NumberEntity):
     """Number entity for setting the external charging current limit."""
 
     _attr_has_entity_name = True
@@ -73,19 +71,14 @@ class MabwarpChargingCurrentNumber(NumberEntity):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
                 self._attr_native_value = float(data["current"]) / 1000
-                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+                self._reset_parse_error_count()
+                self.async_write_ha_state()
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
-                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
+                self._handle_parse_error(err, self._topic)
 
         topic_prefix = self._config_entry.data[CONF_TOPIC_PREFIX]
         self._topic = TOPIC_EVSE_EXT_CURRENT.format(prefix=topic_prefix)
         self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe from MQTT when removed."""
-        if self._unsubscribe:
-            self._unsubscribe()
-            self._unsubscribe = None
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
@@ -106,23 +99,10 @@ class MabwarpChargingCurrentNumber(NumberEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this number entity."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        return f"{DOMAIN}_{device_id}_charging_current_limit"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        warp_version = self._config_entry.data[CONF_WARP_VERSION]
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=f"WARP Charger {device_id}",
-            manufacturer="Tinkerforge GmbH",
-            model=warp_version,
-        )
+        return self._build_unique_id("charging_current_limit")
 
 
-class MabwarpChargeLimitsDurationNumber(NumberEntity):
+class MabwarpChargeLimitsDurationNumber(MabwarpEntityBase, NumberEntity):
     """Number entity for charge limits default duration."""
 
     _attr_has_entity_name = True
@@ -150,19 +130,14 @@ class MabwarpChargeLimitsDurationNumber(NumberEntity):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
                 self._attr_native_value = float(data.get("duration", 0))
-                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+                self._reset_parse_error_count()
+                self.async_write_ha_state()
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
-                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
+                self._handle_parse_error(err, self._topic)
 
         topic_prefix = self._config_entry.data[CONF_TOPIC_PREFIX]
         self._topic = TOPIC_CHARGE_LIMITS_DEFAULT_LIMITS.format(prefix=topic_prefix)
         self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe from MQTT when removed."""
-        if self._unsubscribe:
-            self._unsubscribe()
-            self._unsubscribe = None
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
@@ -183,23 +158,10 @@ class MabwarpChargeLimitsDurationNumber(NumberEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this number entity."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        return f"{DOMAIN}_{device_id}_charge_limits_duration"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        warp_version = self._config_entry.data[CONF_WARP_VERSION]
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=f"WARP Charger {device_id}",
-            manufacturer="Tinkerforge GmbH",
-            model=warp_version,
-        )
+        return self._build_unique_id("charge_limits_duration")
 
 
-class MabwarpChargeLimitsEnergyNumber(NumberEntity):
+class MabwarpChargeLimitsEnergyNumber(MabwarpEntityBase, NumberEntity):
     """Number entity for charge limits default energy."""
 
     _attr_has_entity_name = True
@@ -227,19 +189,14 @@ class MabwarpChargeLimitsEnergyNumber(NumberEntity):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
                 self._attr_native_value = float(data.get("energy_wh", 0))
-                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+                self._reset_parse_error_count()
+                self.async_write_ha_state()
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
-                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
+                self._handle_parse_error(err, self._topic)
 
         topic_prefix = self._config_entry.data[CONF_TOPIC_PREFIX]
         self._topic = TOPIC_CHARGE_LIMITS_DEFAULT_LIMITS.format(prefix=topic_prefix)
         self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unsubscribe from MQTT when removed."""
-        if self._unsubscribe:
-            self._unsubscribe()
-            self._unsubscribe = None
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
@@ -260,17 +217,4 @@ class MabwarpChargeLimitsEnergyNumber(NumberEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this number entity."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        return f"{DOMAIN}_{device_id}_charge_limits_energy_wh"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        warp_version = self._config_entry.data[CONF_WARP_VERSION]
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=f"WARP Charger {device_id}",
-            manufacturer="Tinkerforge GmbH",
-            model=warp_version,
-        )
+        return self._build_unique_id("charge_limits_energy_wh")

@@ -33,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def _detect_features(hass, topic_prefix: str) -> list[str]:
+async def _detect_features(hass, topic_prefix: str, timeout: int = 5) -> list[str]:
     """Detect features from the charger via MQTT."""
     features: list[str] = []
     topic = TOPIC_INFO_FEATURES.format(prefix=topic_prefix)
@@ -58,7 +58,7 @@ async def _detect_features(hass, topic_prefix: str) -> list[str]:
 
     unsubscribe = await async_subscribe(hass, topic, _features_message_received, 0)
     try:
-        features = await asyncio.wait_for(future, timeout=5)
+        features = await asyncio.wait_for(future, timeout=timeout)
     except TimeoutError:
         _LOGGER.warning("Feature detection timed out for %s", topic_prefix)
         features = []

@@ -5,24 +5,24 @@ from __future__ import annotations
 import datetime
 import json
 import logging
+from typing import Any
 
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_DEVICE_ID,
-    CONF_WARP_VERSION,
-    DOMAIN,
+    CONF_TOPIC_PREFIX,
     TOPIC_CHARGE_LIMITS_STATE,
 )
+from .entity_base import MabwarpEntityBase
 from .sensor_base import MabwarpMqttSensor, async_subscribe
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class MabwarpChargeLimitsTimestampSensor(SensorEntity):
+class MabwarpChargeLimitsTimestampSensor(MabwarpEntityBase, SensorEntity):
     """Sensor for charge limits timestamps (ms -> datetime)."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
@@ -58,14 +58,15 @@ class MabwarpChargeLimitsTimestampSensor(SensorEntity):
                     self._attr_native_value = datetime.datetime.fromtimestamp(int(value) / 1000, tz=datetime.UTC)
                 else:
                     self._attr_native_value = None
-                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+                self._reset_parse_error_count()
+                self.async_write_ha_state()
             except (
                 json.JSONDecodeError,
                 KeyError,
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
+                self._handle_parse_error(err, self._topic)
 
         self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
@@ -78,21 +79,8 @@ class MabwarpChargeLimitsTimestampSensor(SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this sensor."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
         safe_field = self._field_name.replace(".", "_")
-        return f"{DOMAIN}_{device_id}_{self._topic.replace('/', '_')}_{safe_field}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        warp_version = self._config_entry.data[CONF_WARP_VERSION]
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=f"WARP Charger {device_id}",
-            manufacturer="Tinkerforge GmbH",
-            model=warp_version,
-        )
+        return self._build_unique_id(f"{self._topic.replace('/', '_')}_{safe_field}")
 
 
 class MabwarpChargeLimitsEnergySensor(MabwarpMqttSensor):

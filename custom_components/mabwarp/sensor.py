@@ -32,6 +32,7 @@ from .const import (
     TOPIC_METER_VALUE_IDS,
     TOPIC_METER_VALUES,
 )
+from .features import Feature, has_feature, has_meters
 from .sensor_base import MeterValueCoordinator, check_plausibility
 from .sensor_charge_limits import build_charge_limits_entities
 from .sensor_charge_tracker import build_charge_tracker_entities
@@ -54,12 +55,9 @@ async def async_setup_entry(
     topic_prefix = entry.data[CONF_TOPIC_PREFIX]
 
     features = entry.data.get(CONF_FEATURES, [])
-    has_meters = "meters" in features or not features
-    if "meter" in features and "meters" not in features:
-        has_meters = False
-        _LOGGER.warning("Charger uses deprecated meter API, modern meters sensors skipped")
-    has_nfc = "nfc" in features or not features
-    has_charge_tracker = "charge_tracker" in features or not features
+    has_meters_value = has_meters(features)
+    has_nfc = has_feature(features, Feature.NFC) or not features
+    has_charge_tracker = has_feature(features, Feature.CHARGE_TRACKER) or not features
 
     coordinator = MeterValueCoordinator(hass)
 

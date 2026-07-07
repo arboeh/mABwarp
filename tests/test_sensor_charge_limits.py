@@ -3,6 +3,7 @@
 import asyncio
 import datetime
 import json
+import logging
 from unittest.mock import MagicMock, patch
 
 from custom_components.mabwarp.const import (
@@ -95,3 +96,35 @@ def test_charge_limits_energy_sensor_handles_null():
     sensor = MabwarpChargeLimitsEnergySensor(entry, DEFAULT_TOPIC_PREFIX, "Start Energy", "start_energy_kwh", "kWh")
     assert sensor.extract_field({"start_energy_kwh": None}) is None
     assert sensor.extract_field({"start_energy_kwh": 12.5}) == 12.5
+
+
+def test_charge_limits_timestamp_sensor_unavailable_after_three_parse_errors(caplog):
+    """Test charge limits timestamp sensor becomes unavailable after 3 consecutive parse errors."""
+    entry = _make_mock_entry(features=["charge_limits"])
+    sensor = MabwarpChargeLimitsTimestampSensor(entry, DEFAULT_TOPIC_PREFIX, "Start", "start_timestamp_ms")
+    sensor.hass = MagicMock()
+    sensor.hass.loop = MagicMock()
+    sensor.async_write_ha_state = MagicMock()
+
+    captured_callback = None
+
+    async def mock_async_subscribe(hass, topic, callback, qos):
+        nonlocal captured_callback
+        captured_callback = callback
+        return lambda: None
+
+    with patch(
+        "custom_components.mabwarp.sensor_charge_limits.async_subscribe",
+        side_effect=mock_async_subscribe,
+    ):
+        asyncio.run(sensor.async_added_to_hass())
+
+    assert captured_callback is not None
+    with caplog.at_level(logging.WARNING, logger="custom_components.mabwarp.entity_base"):
+        for _ in range(3):
+            msg = MagicMock()
+            msg.payload = b"not json"
+            captured_callback(msg)
+
+    assert sensor._attr_available is False
+    assert "Failed to parse MQTT message" in caplog.text

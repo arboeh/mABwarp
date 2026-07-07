@@ -3,38 +3,38 @@
     "step": {
       "user": {
         "title": "mABwarp – WARP Charger via MQTT",
-        "description": "Verbinde deinen Tinkerforge WARP Charger mit Home Assistant über MQTT. Gib den MQTT-Topic-Prefix und die Geräte-ID aus deinem WARP-Webinterface ein.",
+        "description": "Connect your Tinkerforge WARP Charger to Home Assistant via MQTT. Enter the MQTT topic prefix and the Device ID shown in your WARP web interface.",
         "data": {
-          "topic_prefix": "MQTT-Topic-Prefix",
-          "device_id": "Geräte-ID",
+          "topic_prefix": "MQTT Topic Prefix",
+          "device_id": "Device ID",
           "warp_version": "WARP Charger Version"
         },
         "data_description": {
-          "topic_prefix": "Der MQTT-Topic-Prefix aus dem WARP-Webinterface (z. B. warp3)",
-          "device_id": "Optionaler Anzeigename in Home Assistant. Wird leer gelassen, wird der Topic-Prefix verwendet.",
-          "warp_version": "Wähle die Hardware-Generation deines WARP Chargers"
+          "topic_prefix": "The MQTT-Topic-Prefix from the WARP web interface (e.g. warp3)",
+          "device_id": "Optional display name in Home Assistant. If left empty, the topic prefix will be used.",
+          "warp_version": "Select your WARP Charger hardware generation"
         }
       }
     },
     "error": {
-      "mqtt_not_configured": "Die MQTT-Integration ist in Home Assistant nicht konfiguriert."
+      "mqtt_not_configured": "MQTT integration is not configured in Home Assistant."
     },
     "abort": {
-      "already_configured": "Dieser WARP Charger ist bereits konfiguriert.",
-      "mqtt_not_available": "Die MQTT-Integration ist nicht verfügbar."
+      "already_configured": "This WARP Charger is already configured.",
+      "mqtt_not_available": "MQTT integration is not available."
     }
   },
   "issues": {
     "features_not_detected": {
-      "title": "Feature-Erkennung fehlgeschlagen",
-      "description": "Feature-Erkennung fehlgeschlagen. Alle Sensoren werden trotzdem eingerichtet, könnten aber 'nicht verfügbar' anzeigen."
+      "title": "Feature detection failed",
+      "description": "Feature detection failed. All sensors will be set up anyway but may show as unavailable."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Optionen",
-        "description": "Feature-Erkennung erneut ausführen"
+        "title": "Options",
+        "description": "Re-detect features"
       }
     }
   },
@@ -46,17 +46,17 @@
       "error_state": { "name": "Fehlerstatus" },
       "cp_pwm_duty_cycle": { "name": "CP-PWM-Tastverhältnis" },
       "uptime": { "name": "Betriebszeit" },
-      "13": { "name": "Spannung L1" },
-      "14": { "name": "Spannung L2" },
-      "15": { "name": "Spannung L3" },
-      "16": { "name": "Strom L1" },
-      "17": { "name": "Strom L2" },
-      "18": { "name": "Strom L3" },
-      "19": { "name": "Leistung L1" },
-      "20": { "name": "Leistung L2" },
-      "21": { "name": "Leistung L3" },
-      "30": { "name": "Leistung" },
-      "40": { "name": "Energie (gesamt)" },
+      "voltage_l1": { "name": "Spannung L1" },
+      "voltage_l2": { "name": "Spannung L2" },
+      "voltage_l3": { "name": "Spannung L3" },
+      "current_l1": { "name": "Strom L1" },
+      "current_l2": { "name": "Strom L2" },
+      "current_l3": { "name": "Strom L3" },
+      "power_l1": { "name": "Leistung L1" },
+      "power_l2": { "name": "Leistung L2" },
+      "power_l3": { "name": "Leistung L3" },
+      "power_total": { "name": "Leistung" },
+      "energy_total": { "name": "Energie (gesamt)" },
       "nfc_last_tag": { "name": "Letzter NFC-Tag" },
       "nfc_last_seen": { "name": "NFC zuletzt gesehen" },
       "charge_manager_state": { "name": "Lastmanagement-Status" },
@@ -86,7 +86,6 @@
       "charge_limits_start_energy_kwh": { "name": "Ladegrenzen Startenergie" },
       "charge_limits_target_energy_kwh": { "name": "Ladegrenzen Zielenergie" },
       "temperature_current": { "name": "Temperatur Aktuell" },
-      "p14a_enwg_throttled": { "name": "P14A ENWG Gedrosselt" },
       "p14a_enwg_max_power": { "name": "P14A ENWG Max Leistung" },
       "wifi_signal_strength": { "name": "WLAN-Signalstärke" },
       "wifi_ip_address": { "name": "WLAN-IP-Adresse" },
@@ -110,7 +109,8 @@
       "restart_charge_limits": { "name": "Ladegrenzen neu starten" }
     },
     "binary_sensor": {
-      "power_manager_is_3phase": { "name": "Power Manager 3-Phasen" }
+      "power_manager_is_3phase": { "name": "Power Manager 3-Phasen" },
+      "p14a_enwg_throttled": { "name": "P14A ENWG Gedrosselt" }
     },
     "select": {
       "power_manager_charge_mode": { "name": "Power Manager Ladmodus" }

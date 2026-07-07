@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import logging
 from unittest.mock import MagicMock, patch
 
 from custom_components.mabwarp.const import (
@@ -252,3 +253,35 @@ def test_day_ahead_prices_forecast_sensor_handles_invalid_json():
     msg.payload = b"not json"
     message_received(msg)
     assert sensor._attr_native_value is None
+
+
+def test_day_ahead_price_sensor_unavailable_after_three_parse_errors(caplog):
+    """Test day ahead price sensor becomes unavailable after 3 consecutive parse errors."""
+    entry = _make_mock_entry(features=["day_ahead_prices"])
+    sensor = MabwarpDayAheadPriceSensor(entry, DEFAULT_TOPIC_PREFIX)
+    sensor.hass = MagicMock()
+    sensor.hass.loop = MagicMock()
+    sensor.async_write_ha_state = MagicMock()
+
+    captured_callback = None
+
+    async def mock_async_subscribe(hass, topic, callback, qos):
+        nonlocal captured_callback
+        captured_callback = callback
+        return lambda: None
+
+    with patch(
+        "custom_components.mabwarp.sensor_base.async_subscribe",
+        side_effect=mock_async_subscribe,
+    ):
+        asyncio.run(sensor.async_added_to_hass())
+
+    assert captured_callback is not None
+    with caplog.at_level(logging.WARNING, logger="custom_components.mabwarp.entity_base"):
+        for _ in range(3):
+            msg = MagicMock()
+            msg.payload = b"not json"
+            captured_callback(msg)
+
+    assert sensor._attr_available is False
+    assert "Failed to parse MQTT message" in caplog.text

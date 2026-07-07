@@ -338,11 +338,13 @@ def test_alloc_field_extraction_from_charge_manager_state():
     assert sensor.extract_field(payload_with_values) == 16000
 
 
-def test_message_received_uses_call_soon_threadsafe():
-    """Test that message_received calls async_write_ha_state via call_soon_threadsafe.
+def test_message_received_uses_direct_async_write_ha_state():
+    """Test that message_received calls async_write_ha_state directly.
 
-    This is a regression test for the thread-safety bug where async_write_ha_state
-    was called directly from the MQTT callback instead of via call_soon_threadsafe.
+    The MQTT message_received callback runs in the event loop thread
+    (driven by asyncio add_reader/add_writer, not by paho's loop_start),
+    so call_soon_threadsafe is unnecessary. async_write_ha_state should be
+    called directly for lower overhead.
     """
     mock_config_entry = type(
         "MockEntry",
@@ -366,7 +368,10 @@ def test_message_received_uses_call_soon_threadsafe():
     )
 
     source = inspect.getsource(sensor.async_added_to_hass)
-    assert "call_soon_threadsafe" in source, "async_added_to_hass should use call_soon_threadsafe for thread safety"
+    assert (
+        "call_soon_threadsafe" not in source
+    ), "async_added_to_hass must not use call_soon_threadsafe since MQTT callbacks run in the event loop thread"
+    assert "self.async_write_ha_state()" in source, "async_added_to_hass should call async_write_ha_state directly"
 
 
 def test_message_received_missing_meter_index_sets_none():

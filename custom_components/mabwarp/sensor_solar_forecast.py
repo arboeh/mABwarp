@@ -12,18 +12,16 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_DEVICE_ID,
-    CONF_WARP_VERSION,
-    DOMAIN,
+    CONF_TOPIC_PREFIX,
     TOPIC_SOLAR_FORECAST_PLANES_CONFIG,
     TOPIC_SOLAR_FORECAST_PLANES_LIST,
     TOPIC_SOLAR_FORECAST_PLANES_STATE,
     TOPIC_SOLAR_FORECAST_STATE,
 )
+from .entity_base import MabwarpEntityBase
 from .sensor_base import MabwarpMqttSensor, async_subscribe
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +72,7 @@ class MabwarpSolarPlaneStateSensor(MabwarpMqttSensor):
         )
 
 
-class MabwarpSolarPlaneConfigSensor(SensorEntity):
+class MabwarpSolarPlaneConfigSensor(MabwarpEntityBase, SensorEntity):
     """Sensor for a single solar plane's config (name, wp)."""
 
     _attr_native_value = None
@@ -104,14 +102,15 @@ class MabwarpSolarPlaneConfigSensor(SensorEntity):
                     "name": data.get("name"),
                     "place": data.get("place"),
                 }
-                self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+                self._reset_parse_error_count()
+                self.async_write_ha_state()
             except (
                 json.JSONDecodeError,
                 KeyError,
                 TypeError,
                 ValueError,
             ) as err:
-                _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._topic, err)
+                self._handle_parse_error(err, self._topic)
 
         self._unsubscribe = await async_subscribe(self.hass, self._topic, message_received, 0)
 
@@ -124,20 +123,7 @@ class MabwarpSolarPlaneConfigSensor(SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this sensor."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        return f"{DOMAIN}_{device_id}_solar_plane_{self._plane_idx}_config"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        warp_version = self._config_entry.data[CONF_WARP_VERSION]
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=f"WARP Charger {device_id}",
-            manufacturer="Tinkerforge GmbH",
-            model=warp_version,
-        )
+        return self._build_unique_id(f"solar_plane_{self._plane_idx}_config")
 
 
 def _discover_solar_planes(

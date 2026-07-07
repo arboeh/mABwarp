@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import logging
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.sensor import SensorDeviceClass
@@ -164,11 +165,75 @@ def test_p14a_enwg_throttled_binary_sensor_parses_throttled_field():
     assert sensor._attr_is_on is True
 
 
+def test_p14a_enwg_throttled_binary_sensor_unavailable_after_three_parse_errors(caplog):
+    """Test sensor becomes unavailable after 3 consecutive parse errors."""
+    entry = _make_mock_entry(features=["p14a_enwg"])
+    sensor = MabwarpP14aEnwgThrottledBinarySensor(entry, DEFAULT_TOPIC_PREFIX)
+    sensor.hass = MagicMock()
+    sensor.hass.loop = MagicMock()
+    sensor.async_write_ha_state = MagicMock()
+
+    captured_callback = None
+
+    async def mock_async_subscribe(hass, topic, callback, qos):
+        nonlocal captured_callback
+        captured_callback = callback
+        return lambda: None
+
+    with patch(
+        "custom_components.mabwarp.sensor_misc.async_subscribe",
+        side_effect=mock_async_subscribe,
+    ):
+        asyncio.run(sensor.async_added_to_hass())
+
+    assert captured_callback is not None
+    with caplog.at_level(logging.WARNING, logger="custom_components.mabwarp.entity_base"):
+        for _ in range(3):
+            msg = MagicMock()
+            msg.payload = b"not json"
+            captured_callback(msg)
+
+    assert sensor._attr_available is False
+    assert "Failed to parse MQTT message" in caplog.text
+
+
 def test_p14a_enwg_max_power_sensor_parses_max_power():
     """Test P14A ENWG max power sensor parses max_power field."""
     entry = _make_mock_entry(features=["p14a_enwg"])
     sensor = MabwarpP14aEnwgMaxPowerSensor(entry, DEFAULT_TOPIC_PREFIX)
     assert sensor.extract_field({"max_power": 4200}) == 4200
+
+
+def test_temperature_sensor_unavailable_after_three_parse_errors(caplog):
+    """Test temperature sensor becomes unavailable after 3 consecutive parse errors."""
+    entry = _make_mock_entry(features=["temperatures"])
+    sensor = MabwarpTemperatureSensor(entry, DEFAULT_TOPIC_PREFIX, "Temperature Current", "current")
+    sensor.hass = MagicMock()
+    sensor.hass.loop = MagicMock()
+    sensor.async_write_ha_state = MagicMock()
+
+    captured_callback = None
+
+    async def mock_async_subscribe(hass, topic, callback, qos):
+        nonlocal captured_callback
+        captured_callback = callback
+        return lambda: None
+
+    with patch(
+        "custom_components.mabwarp.sensor_base.async_subscribe",
+        side_effect=mock_async_subscribe,
+    ):
+        asyncio.run(sensor.async_added_to_hass())
+
+    assert captured_callback is not None
+    with caplog.at_level(logging.WARNING, logger="custom_components.mabwarp.entity_base"):
+        for _ in range(3):
+            msg = MagicMock()
+            msg.payload = b"not json"
+            captured_callback(msg)
+
+    assert sensor._attr_available is False
+    assert "Failed to parse MQTT message" in caplog.text
 
 
 def test_temperature_key_discovery_double_message_no_invalid_state_error():
