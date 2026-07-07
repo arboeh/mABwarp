@@ -211,7 +211,7 @@ def test_extract_field_meter_array_changed_order():
 
 
 def test_sensor_name():
-    """Test sensor name starts with WARP prefix."""
+    """Test sensor name uses translation key when provided, else raw name fallback."""
     mock_config_entry = type(
         "MockEntry",
         (),
@@ -222,7 +222,23 @@ def test_sensor_name():
             }
         },
     )()
-    sensor = MabwarpMqttSensor(
+
+    translated = MabwarpMqttSensor(
+        mock_config_entry,
+        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
+        "Test Sensor",
+        "test_field",
+        None,
+        None,
+        None,
+        None,
+        translation_key="iec61851_state",
+    )
+    assert translated._attr_has_entity_name is True
+    assert translated._attr_translation_key == "iec61851_state"
+    assert getattr(translated, "_attr_name", None) is None
+
+    fallback = MabwarpMqttSensor(
         mock_config_entry,
         TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
         "Test Sensor",
@@ -232,7 +248,9 @@ def test_sensor_name():
         None,
         None,
     )
-    assert sensor._attr_name.startswith("WARP ")
+    assert fallback._attr_has_entity_name is True
+    assert fallback._attr_translation_key is None
+    assert getattr(fallback, "_attr_name", None) == "Test Sensor"
 
 
 def test_conversion_factor_applied():

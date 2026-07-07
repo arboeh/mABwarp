@@ -60,7 +60,10 @@
       "nfc_last_tag": { "name": "Letzter NFC-Tag" },
       "nfc_last_seen": { "name": "NFC zuletzt gesehen" },
       "charge_manager_state": { "name": "Lastmanagement-Status" },
-      "allocated_current": { "name": "Zugewiesener Strom" },
+      "allocated_current_slot_0": { "name": "Zugewiesener Strom Slot 0" },
+      "allocated_current_slot_1": { "name": "Zugewiesener Strom Slot 1" },
+      "allocated_current_slot_2": { "name": "Zugewiesener Strom Slot 2" },
+      "allocated_current_slot_3": { "name": "Zugewiesener Strom Slot 3" },
       "firmware_version": { "name": "Firmware-Version" },
       "display_type": { "name": "Gerätetyp" },
       "display_name": { "name": "Anzeigename" },
@@ -84,7 +87,14 @@
       "charge_limits_target_energy_kwh": { "name": "Ladegrenzen Zielenergie" },
       "temperature_current": { "name": "Temperatur Aktuell" },
       "p14a_enwg_throttled": { "name": "P14A ENWG Gedrosselt" },
-      "p14a_enwg_max_power": { "name": "P14A ENWG Max Leistung" }
+      "p14a_enwg_max_power": { "name": "P14A ENWG Max Leistung" },
+      "wifi_signal_strength": { "name": "WLAN-Signalstärke" },
+      "wifi_ip_address": { "name": "WLAN-IP-Adresse" },
+      "wifi_connection_state": { "name": "WLAN-Verbindungsstatus" },
+      "ethernet_link_speed": { "name": "Ethernet-Verbindungsgeschwindigkeit" },
+      "ethernet_ip_address": { "name": "Ethernet-IP-Adresse" },
+      "day_ahead_price": { "name": "Day-Ahead-Preis" },
+      "day_ahead_prices_forecast": { "name": "Day-Ahead-Preisprognose" }
     },
     "number": {
       "charging_current_limit": { "name": "Ladestrom-Begrenzung" },

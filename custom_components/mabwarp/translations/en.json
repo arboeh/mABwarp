@@ -60,7 +60,10 @@
       "nfc_last_tag": { "name": "NFC Last Tag" },
       "nfc_last_seen": { "name": "NFC Last Seen" },
       "charge_manager_state": { "name": "Charge Manager State" },
-      "allocated_current": { "name": "Allocated Current" },
+      "allocated_current_slot_0": { "name": "Allocated Current Slot 0" },
+      "allocated_current_slot_1": { "name": "Allocated Current Slot 1" },
+      "allocated_current_slot_2": { "name": "Allocated Current Slot 2" },
+      "allocated_current_slot_3": { "name": "Allocated Current Slot 3" },
       "firmware_version": { "name": "Firmware Version" },
       "display_type": { "name": "Display Type" },
       "display_name": { "name": "Display Name" },
@@ -84,7 +87,14 @@
       "charge_limits_target_energy_kwh": { "name": "Charge Limits Target Energy" },
       "temperature_current": { "name": "Temperature Current" },
       "p14a_enwg_throttled": { "name": "P14A ENWG Throttled" },
-      "p14a_enwg_max_power": { "name": "P14A ENWG Max Power" }
+      "p14a_enwg_max_power": { "name": "P14A ENWG Max Power" },
+      "wifi_signal_strength": { "name": "WiFi Signal Strength" },
+      "wifi_ip_address": { "name": "WiFi IP Address" },
+      "wifi_connection_state": { "name": "WiFi Connection State" },
+      "ethernet_link_speed": { "name": "Ethernet Link Speed" },
+      "ethernet_ip_address": { "name": "Ethernet IP Address" },
+      "day_ahead_price": { "name": "Day Ahead Price" },
+      "day_ahead_prices_forecast": { "name": "Day Ahead Prices Forecast" }
     },
     "number": {
       "charging_current_limit": { "name": "Charging Current Limit" },

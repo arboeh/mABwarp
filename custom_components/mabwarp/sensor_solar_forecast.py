@@ -32,7 +32,13 @@ _LOGGER = logging.getLogger(__name__)
 class MabwarpSolarForecastValueSensor(MabwarpMqttSensor):
     """Sensor for solar forecast values with -1 => None mapping."""
 
-    def __init__(self, config_entry: ConfigEntry, topic_prefix: str, field_name: str) -> None:
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        topic_prefix: str,
+        field_name: str,
+        translation_key: str | None = None,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(
             config_entry,
@@ -43,6 +49,7 @@ class MabwarpSolarForecastValueSensor(MabwarpMqttSensor):
             SensorDeviceClass.ENERGY,
             None,
             coordinator=None,
+            translation_key=translation_key,
         )
 
     def extract_field(self, data: dict) -> Any:
@@ -71,6 +78,8 @@ class MabwarpSolarPlaneConfigSensor(SensorEntity):
     """Sensor for a single solar plane's config (name, wp)."""
 
     _attr_native_value = None
+    _attr_has_entity_name = True
+    _attr_name: str | None = None
 
     def __init__(self, config_entry: ConfigEntry, topic_prefix: str, plane_idx: int) -> None:
         """Initialize the sensor."""
@@ -78,6 +87,7 @@ class MabwarpSolarPlaneConfigSensor(SensorEntity):
         self._topic = TOPIC_SOLAR_FORECAST_PLANES_CONFIG.format(prefix=topic_prefix, idx=plane_idx)
         self._unsubscribe = None
         self._plane_idx = plane_idx
+        self._attr_name = f"Solar Plane {plane_idx} Config"
         self._attr_extra_state_attributes: dict[str, Any] = {}
 
     async def async_added_to_hass(self) -> None:
@@ -245,9 +255,9 @@ def build_solar_forecast_entities(
         return []
 
     entities = [
-        MabwarpSolarForecastValueSensor(entry, topic_prefix, "wh_today"),
-        MabwarpSolarForecastValueSensor(entry, topic_prefix, "wh_today_remaining"),
-        MabwarpSolarForecastValueSensor(entry, topic_prefix, "wh_tomorrow"),
+        MabwarpSolarForecastValueSensor(entry, topic_prefix, "wh_today", "solar_forecast_wh_today"),
+        MabwarpSolarForecastValueSensor(entry, topic_prefix, "wh_today_remaining", "solar_forecast_wh_today_remaining"),
+        MabwarpSolarForecastValueSensor(entry, topic_prefix, "wh_tomorrow", "solar_forecast_wh_tomorrow"),
     ]
 
     _discover_solar_planes(hass, entry, topic_prefix, async_add_entities)

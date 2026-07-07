@@ -48,7 +48,8 @@ async def async_setup_entry(
 class MabwarpChargingCurrentNumber(NumberEntity):
     """Number entity for setting the external charging current limit."""
 
-    _attr_name = "Charging Current Limit"
+    _attr_has_entity_name = True
+    _attr_translation_key = "charging_current_limit"
     _attr_native_min_value = 0
     _attr_native_max_value = 32
     _attr_native_step = 1
@@ -124,7 +125,8 @@ class MabwarpChargingCurrentNumber(NumberEntity):
 class MabwarpChargeLimitsDurationNumber(NumberEntity):
     """Number entity for charge limits default duration."""
 
-    _attr_name = "Charge Limits Default Duration"
+    _attr_has_entity_name = True
+    _attr_translation_key = "charge_limits_duration"
     _attr_native_min_value = 0
     _attr_native_max_value = 24
     _attr_native_step = 0.5
@@ -200,7 +202,8 @@ class MabwarpChargeLimitsDurationNumber(NumberEntity):
 class MabwarpChargeLimitsEnergyNumber(NumberEntity):
     """Number entity for charge limits default energy."""
 
-    _attr_name = "Charge Limits Default Energy"
+    _attr_has_entity_name = True
+    _attr_translation_key = "charge_limits_energy_wh"
     _attr_native_min_value = 0
     _attr_native_max_value = 100000
     _attr_native_step = 100

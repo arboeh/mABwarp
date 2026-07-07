@@ -132,8 +132,15 @@ class MabwarpMqttSensor(SensorEntity):
         state_class: SensorStateClass | None,
         coordinator: MeterValueCoordinator | None = None,
         conversion_factor: float | None = None,
+        translation_key: str | None = None,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the sensor.
+
+        When ``translation_key`` is provided the entity name is resolved via the
+        integration's translation files (prefixed with the device name). Otherwise
+        ``name`` is used directly as a fallback (e.g. for dynamically discovered
+        entities that cannot have a static translation key).
+        """
         self._config_entry = config_entry
         self._topic = topic
         self._field_path = field_path
@@ -141,7 +148,10 @@ class MabwarpMqttSensor(SensorEntity):
         self._conversion_factor = conversion_factor
         self._unsubscribe = None
 
-        self._attr_name = f"WARP {name}"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = translation_key
+        if translation_key is None:
+            self._attr_name = name
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_state_class = state_class

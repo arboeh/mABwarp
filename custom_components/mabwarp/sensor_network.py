@@ -36,6 +36,7 @@ class MabwarpWifiSignalStrengthSensor(MabwarpMqttSensor):
             SensorDeviceClass.SIGNAL_STRENGTH,
             SensorStateClass.MEASUREMENT,
             coordinator=None,
+            translation_key="wifi_signal_strength",
         )
 
 
@@ -53,6 +54,7 @@ class MabwarpWifiIpAddressSensor(MabwarpMqttSensor):
             None,
             None,
             coordinator=None,
+            translation_key="wifi_ip_address",
         )
 
 
@@ -70,6 +72,7 @@ class MabwarpWifiConnectionStateSensor(MabwarpMqttSensor):
             None,
             None,
             coordinator=None,
+            translation_key="wifi_connection_state",
         )
 
 
@@ -87,6 +90,7 @@ class MabwarpEthernetLinkSpeedSensor(MabwarpMqttSensor):
             SensorDeviceClass.DATA_RATE,
             SensorStateClass.MEASUREMENT,
             coordinator=None,
+            translation_key="ethernet_link_speed",
         )
 
 
@@ -104,6 +108,7 @@ class MabwarpEthernetIpAddressSensor(MabwarpMqttSensor):
             None,
             None,
             coordinator=None,
+            translation_key="ethernet_ip_address",
         )
 
 

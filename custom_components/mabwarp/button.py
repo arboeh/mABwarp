@@ -36,13 +36,13 @@ async def async_setup_entry(
     entities = [
         MabwarpButtonBase(
             entry,
-            "Start Charging",
+            "start_charging",
             TOPIC_EVSE_START.format(prefix=topic_prefix),
             "mdi:play-circle",
         ),
         MabwarpButtonBase(
             entry,
-            "Stop Charging",
+            "stop_charging",
             TOPIC_EVSE_STOP.format(prefix=topic_prefix),
             "mdi:stop-circle",
         ),
@@ -52,7 +52,7 @@ async def async_setup_entry(
         entities.append(
             MabwarpButtonBase(
                 entry,
-                "Restart Charge Limits",
+                "restart_charge_limits",
                 TOPIC_CHARGE_LIMITS_RESTART.format(prefix=topic_prefix),
                 "mdi:restart",
             )
@@ -64,11 +64,12 @@ async def async_setup_entry(
 class MabwarpButtonBase(ButtonEntity):
     """Base class for mABwarp MQTT buttons."""
 
-    def __init__(self, config_entry: ConfigEntry, name: str, topic: str, icon: str) -> None:
+    def __init__(self, config_entry: ConfigEntry, translation_key: str, topic: str, icon: str) -> None:
         """Initialize the button."""
         self._config_entry = config_entry
         self._topic = topic
-        self._attr_name = name
+        self._attr_has_entity_name = True
+        self._attr_translation_key = translation_key
         self._attr_icon = icon
 
     async def async_press(self) -> None:

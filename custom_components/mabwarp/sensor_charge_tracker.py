@@ -39,6 +39,7 @@ class MabwarpCurrentChargeUserIDSensor(MabwarpMqttSensor):
             None,
             None,
             coordinator=None,
+            translation_key="current_charge_user_id",
         )
 
     def extract_field(self, data: dict) -> Any:
@@ -51,6 +52,8 @@ class MabwarpLastChargeSensor(SensorEntity):
 
     _attr_icon = "mdi:ev-station"
     _attr_native_value = None
+    _attr_has_entity_name = True
+    _attr_translation_key = "last_charge_energy"
 
     def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
         """Initialize the last charge sensor."""
@@ -137,6 +140,7 @@ def build_charge_tracker_entities(entry, topic_prefix: str, features: list) -> l
             None,
             None,
             coordinator=None,
+            translation_key="tracked_charges",
         ),
         MabwarpMqttSensor(
             entry,
@@ -147,6 +151,7 @@ def build_charge_tracker_entities(entry, topic_prefix: str, features: list) -> l
             SensorDeviceClass.ENERGY,
             None,
             coordinator=None,
+            translation_key="current_charge_meter_start",
         ),
         MabwarpCurrentChargeUserIDSensor(entry, topic_prefix),
         MabwarpLastChargeSensor(entry, topic_prefix),

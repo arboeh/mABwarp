@@ -38,7 +38,8 @@ async def async_setup_entry(
 class MabwarpUserEnabledSwitch(SwitchEntity):
     """Switch to enable or disable the WARP Charger."""
 
-    _attr_name = "Wallbox Enabled"
+    _attr_has_entity_name = True
+    _attr_translation_key = "user_enabled"
     _attr_icon = "mdi:ev-station"
 
     def __init__(self, config_entry: ConfigEntry) -> None:

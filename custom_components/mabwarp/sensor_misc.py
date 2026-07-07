@@ -37,7 +37,8 @@ class MabwarpFeaturesSensor(SensorEntity):
     """Sensor that reports the number of detected features."""
 
     _attr_icon = "mdi:format-list-checks"
-    _attr_name = "Supported Features"
+    _attr_has_entity_name = True
+    _attr_translation_key = "features"
     _attr_native_value = 0
 
     def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
@@ -104,7 +105,14 @@ class MabwarpFeaturesSensor(SensorEntity):
 class MabwarpTemperatureSensor(MabwarpMqttSensor):
     """Sensor for temperature values."""
 
-    def __init__(self, config_entry: ConfigEntry, topic_prefix: str, name: str, field_name: str) -> None:
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        topic_prefix: str,
+        name: str,
+        field_name: str,
+        translation_key: str | None = None,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(
             config_entry,
@@ -115,6 +123,7 @@ class MabwarpTemperatureSensor(MabwarpMqttSensor):
             SensorDeviceClass.TEMPERATURE,
             None,
             coordinator=None,
+            translation_key=translation_key,
         )
 
 
@@ -122,6 +131,8 @@ class MabwarpP14aEnwgThrottledBinarySensor(BinarySensorEntity):
     """Binary sensor for P14A ENWG throttling status."""
 
     _attr_icon = "mdi:speedometer"
+    _attr_has_entity_name = True
+    _attr_translation_key = "p14a_enwg_throttled"
 
     def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
         """Initialize the binary sensor."""
@@ -190,6 +201,7 @@ class MabwarpP14aEnwgMaxPowerSensor(MabwarpMqttSensor):
             SensorDeviceClass.POWER,
             None,
             coordinator=None,
+            translation_key="p14a_enwg_max_power",
         )
 
 
@@ -270,6 +282,7 @@ def build_misc_entities(
                 None,
                 None,
                 coordinator=None,
+                translation_key="firmware_version",
             ),
             MabwarpMqttSensor(
                 entry,
@@ -280,6 +293,7 @@ def build_misc_entities(
                 None,
                 None,
                 coordinator=None,
+                translation_key="display_type",
             ),
             MabwarpMqttSensor(
                 entry,
@@ -290,6 +304,7 @@ def build_misc_entities(
                 None,
                 None,
                 coordinator=None,
+                translation_key="display_name",
             ),
         ]
     )
@@ -305,6 +320,7 @@ def build_misc_entities(
                 None,
                 None,
                 coordinator=None,
+                translation_key="charge_manager_state",
             ),
             MabwarpMqttSensor(
                 entry,
@@ -316,6 +332,7 @@ def build_misc_entities(
                 None,
                 None,
                 0.001,
+                translation_key="allocated_current_slot_0",
             ),
             MabwarpMqttSensor(
                 entry,
@@ -327,6 +344,7 @@ def build_misc_entities(
                 None,
                 None,
                 0.001,
+                translation_key="allocated_current_slot_1",
             ),
             MabwarpMqttSensor(
                 entry,
@@ -338,6 +356,7 @@ def build_misc_entities(
                 None,
                 None,
                 0.001,
+                translation_key="allocated_current_slot_2",
             ),
             MabwarpMqttSensor(
                 entry,
@@ -349,13 +368,16 @@ def build_misc_entities(
                 None,
                 None,
                 0.001,
+                translation_key="allocated_current_slot_3",
             ),
         ]
     )
 
     has_temperatures = "temperatures" in features
     if has_temperatures:
-        entities.append(MabwarpTemperatureSensor(entry, topic_prefix, "Temperature Current", "current"))
+        entities.append(
+            MabwarpTemperatureSensor(entry, topic_prefix, "Temperature Current", "current", "temperature_current")
+        )
         _discover_temperature_keys(hass, entry, topic_prefix, async_add_entities)
 
     has_p14a_enwg = "p14a_enwg" in features

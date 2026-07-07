@@ -36,6 +36,8 @@ class MabwarpChargeModeSensor(SensorEntity):
 
     _attr_icon = "mdi:ev-station"
     _attr_native_value = None
+    _attr_has_entity_name = True
+    _attr_translation_key = "power_manager_charge_mode"
 
     def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
         """Initialize the sensor."""
@@ -98,6 +100,8 @@ class MabwarpConfigErrorFlagsSensor(SensorEntity):
 
     _attr_icon = "mdi:alert-circle"
     _attr_native_value = None
+    _attr_has_entity_name = True
+    _attr_translation_key = "power_manager_config_error_flags"
 
     def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
         """Initialize the sensor."""
@@ -175,6 +179,7 @@ def build_power_manager_entities(entry, topic_prefix: str, features: list) -> li
             None,
             None,
             coordinator=None,
+            translation_key="power_manager_config_error_flags",
         ),
         MabwarpMqttSensor(
             entry,
@@ -185,6 +190,7 @@ def build_power_manager_entities(entry, topic_prefix: str, features: list) -> li
             None,
             None,
             coordinator=None,
+            translation_key="power_manager_external_control",
         ),
         MabwarpMqttSensor(
             entry,
@@ -195,6 +201,7 @@ def build_power_manager_entities(entry, topic_prefix: str, features: list) -> li
             SensorDeviceClass.POWER,
             None,
             coordinator=None,
+            translation_key="power_manager_power_at_meter",
         ),
         MabwarpMqttSensor(
             entry,
@@ -205,6 +212,7 @@ def build_power_manager_entities(entry, topic_prefix: str, features: list) -> li
             SensorDeviceClass.POWER,
             None,
             coordinator=None,
+            translation_key="power_manager_power_available",
         ),
         MabwarpMqttSensor(
             entry,
@@ -215,6 +223,7 @@ def build_power_manager_entities(entry, topic_prefix: str, features: list) -> li
             None,
             None,
             coordinator=None,
+            translation_key="power_manager_charging_blocked",
         ),
     ]
     return entities

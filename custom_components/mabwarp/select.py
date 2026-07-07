@@ -49,6 +49,8 @@ class MabwarpChargeModeSelect(SelectEntity):
     """
 
     _attr_icon = "mdi:ev-station"
+    _attr_has_entity_name = True
+    _attr_translation_key = "power_manager_charge_mode"
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the select entity."""

@@ -39,6 +39,8 @@ class MabwarpIs3phaseBinarySensor(BinarySensorEntity):
     """Binary sensor for 3-phase power availability."""
 
     _attr_icon = "mdi:lightning-bolt"
+    _attr_has_entity_name = True
+    _attr_translation_key = "power_manager_is_3phase"
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the binary sensor."""

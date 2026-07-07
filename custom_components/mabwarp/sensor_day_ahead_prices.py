@@ -40,6 +40,7 @@ class MabwarpDayAheadPriceSensor(MabwarpMqttSensor):
             SensorStateClass.MEASUREMENT,
             coordinator=None,
             conversion_factor=DAY_AHEAD_PRICE_SCALE_FACTOR,
+            translation_key="day_ahead_price",
         )
 
 
@@ -48,6 +49,8 @@ class MabwarpDayAheadPricesForecastSensor(SensorEntity):
 
     _attr_icon = "mdi:chart-line"
     _attr_native_value = None
+    _attr_has_entity_name = True
+    _attr_translation_key = "day_ahead_prices_forecast"
 
     def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
         """Initialize the forecast sensor."""

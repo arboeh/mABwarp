@@ -28,13 +28,21 @@ class MabwarpChargeLimitsTimestampSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_native_value = None
 
-    def __init__(self, config_entry: ConfigEntry, topic_prefix: str, name: str, field_name: str) -> None:
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        topic_prefix: str,
+        name: str,
+        field_name: str,
+        translation_key: str | None = None,
+    ) -> None:
         """Initialize the sensor."""
         self._config_entry = config_entry
         self._topic = TOPIC_CHARGE_LIMITS_STATE.format(prefix=topic_prefix)
         self._field_name = field_name
         self._unsubscribe = None
-        self._attr_name = name
+        self._attr_has_entity_name = True
+        self._attr_translation_key = translation_key
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""
@@ -97,6 +105,7 @@ class MabwarpChargeLimitsEnergySensor(MabwarpMqttSensor):
         name: str,
         field_name: str,
         unit: str,
+        translation_key: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
@@ -108,6 +117,7 @@ class MabwarpChargeLimitsEnergySensor(MabwarpMqttSensor):
             SensorDeviceClass.ENERGY,
             None,
             coordinator=None,
+            translation_key=translation_key,
         )
 
     def extract_field(self, data: dict) -> Any:
@@ -127,12 +137,14 @@ def build_charge_limits_entities(entry, topic_prefix: str, features: list) -> li
             topic_prefix,
             "Charge Limits Start Timestamp",
             "start_timestamp_ms",
+            "charge_limits_start_timestamp_ms",
         ),
         MabwarpChargeLimitsTimestampSensor(
             entry,
             topic_prefix,
             "Charge Limits Target Timestamp",
             "target_timestamp_ms",
+            "charge_limits_target_timestamp_ms",
         ),
         MabwarpChargeLimitsEnergySensor(
             entry,
@@ -140,6 +152,7 @@ def build_charge_limits_entities(entry, topic_prefix: str, features: list) -> li
             "Charge Limits Start Energy",
             "start_energy_kwh",
             "kWh",
+            "charge_limits_start_energy_kwh",
         ),
         MabwarpChargeLimitsEnergySensor(
             entry,
@@ -147,6 +160,7 @@ def build_charge_limits_entities(entry, topic_prefix: str, features: list) -> li
             "Charge Limits Target Energy",
             "target_energy_kwh",
             "kWh",
+            "charge_limits_target_energy_kwh",
         ),
     ]
     return entities
