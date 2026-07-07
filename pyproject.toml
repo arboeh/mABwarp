@@ -81,3 +81,17 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "homeassistant.*"
 ignore_missing_imports = true
+
+[tool.pyright]
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "basic"
+reportMissingModuleSource = "none"
+reportMissingImports = "none"
+reportUnknownMemberType = "none"
+reportUnknownVariableType = "none"
+reportUnknownArgumentType = "none"
+reportUnknownParameterType = "none"
+reportAttributeAccessIssue = "none"
+reportCallIssue = "none"

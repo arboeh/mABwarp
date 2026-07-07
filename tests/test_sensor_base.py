@@ -1,7 +1,7 @@
 # tests/test_sensor_base.py
 
 import asyncio
-import inspect
+import threading
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.sensor import SensorDeviceClass
@@ -339,13 +339,16 @@ def test_alloc_field_extraction_from_charge_manager_state():
     assert sensor.extract_field(payload_with_values) == 16000
 
 
-def test_message_received_uses_direct_async_write_ha_state():
-    """Test that message_received calls async_write_ha_state directly.
+def test_message_received_offloads_state_write_to_event_loop():
+    """message_received must NOT call async_write_ha_state directly.
 
-    The MQTT message_received callback runs in the event loop thread
-    (driven by asyncio add_reader/add_writer, not by paho's loop_start),
-    so call_soon_threadsafe is unnecessary. async_write_ha_state should be
-    called directly for lower overhead.
+    The MQTT ``on_message`` callback runs in the paho-mqtt network thread, not
+    in Home Assistant's event loop. The state write is therefore rescheduled onto
+    the event loop via ``call_soon_threadsafe`` (fix for HA-ASYNC-001).
+
+    This test delivers a realistic ``warp3/evse/low_level_state``-style payload
+    from a separate thread and verifies that the write happens on the loop, not
+    synchronously in the delivery thread.
     """
     mock_config_entry = type(
         "MockEntry",
@@ -368,11 +371,106 @@ def test_message_received_uses_direct_async_write_ha_state():
         None,
     )
 
-    source = inspect.getsource(sensor.async_added_to_hass)
-    assert (
-        "call_soon_threadsafe" not in source
-    ), "async_added_to_hass must not use call_soon_threadsafe since MQTT callbacks run in the event loop thread"
-    assert "self.async_write_ha_state()" in source, "async_added_to_hass should call async_write_ha_state directly"
+    captured_callback = None
+
+    async def mock_async_subscribe(hass, topic, callback, qos):
+        nonlocal captured_callback
+        captured_callback = callback
+        return lambda: None
+
+    loop = asyncio.new_event_loop()
+    schedule_spy = MagicMock(wraps=loop.call_soon_threadsafe)
+    loop.call_soon_threadsafe = schedule_spy
+    async_write_mock = MagicMock()
+    sensor.hass = MagicMock()
+    sensor.hass.loop = loop
+    sensor.async_write_ha_state = async_write_mock
+
+    with patch(
+        "custom_components.mabwarp.sensor_base.async_subscribe",
+        side_effect=mock_async_subscribe,
+    ):
+        loop.run_until_complete(sensor.async_added_to_hass())
+
+    # Realistic EVSE low_level_state payload excerpt (field accessed via dot path).
+    msg = MagicMock()
+    msg.payload = b'{"test_field": 42}'
+
+    deliver_error = None
+
+    def _deliver():
+        try:
+            captured_callback(msg)
+        except Exception as err:
+            nonlocal deliver_error
+            deliver_error = err
+
+    # Deliver the message from a separate thread to mimic the paho network thread.
+    worker = threading.Thread(target=_deliver)
+    worker.start()
+    worker.join(timeout=5)
+
+    # The state write must NOT happen synchronously in the delivery thread:
+    # it is only queued onto the event loop via call_soon_threadsafe.
+    async_write_mock.assert_not_called()
+    schedule_spy.assert_called_once()
+    assert schedule_spy.call_args.args[0].__func__ is type(sensor)._apply_state_update
+
+    assert deliver_error is None, deliver_error
+
+    # Running the event loop executes the scheduled callback, which writes state.
+    loop.run_until_complete(asyncio.sleep(0))
+    async_write_mock.assert_called_once()
+    loop.close()
+
+
+async def test_apply_state_update_writes_state_in_event_loop(hass):
+    """_apply_state_update runs on the event loop and updates the entity state.
+
+    Uses the real HA event loop (``hass`` fixture) so the scheduled write is
+    executed in the loop context and the resulting state is actually published.
+    """
+    mock_config_entry = type(
+        "MockEntry",
+        (),
+        {
+            "data": {
+                CONF_DEVICE_ID: "TEST01",
+                CONF_WARP_VERSION: "WARP3",
+            }
+        },
+    )()
+    sensor = MabwarpMqttSensor(
+        mock_config_entry,
+        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
+        "Test",
+        "test_field",
+        None,
+        None,
+        None,
+        None,
+    )
+    sensor.hass = hass
+    sensor.entity_id = "sensor.mabwarp_thread_safety_test"
+    sensor._attr_native_value = 250
+
+    running_loops: list = []
+    real_write = sensor.async_write_ha_state
+
+    def spy_write():
+        running_loops.append(asyncio.get_running_loop())
+        return real_write()
+
+    sensor.async_write_ha_state = spy_write
+
+    # Schedule the state update onto the event loop and wait for completion.
+    hass.loop.call_soon_threadsafe(sensor._apply_state_update)
+    await hass.async_block_till_done()
+
+    assert running_loops, "async_write_ha_state was never invoked"
+    assert running_loops[0] is hass.loop, "State write did not run on the event loop"
+    assert hass.states.get(sensor.entity_id) is not None
+    assert hass.states.get(sensor.entity_id).state == "250"
 
 
 def test_message_received_missing_meter_index_sets_none():

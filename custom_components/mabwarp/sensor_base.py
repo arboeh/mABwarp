@@ -173,7 +173,7 @@ class MabwarpMqttSensor(MabwarpEntityBase, SensorEntity):
                     value = value * self._conversion_factor
                 self._attr_native_value = value
                 self._reset_parse_error_count()
-                self.async_write_ha_state()
+                self._schedule_state_update()
             except (
                 json.JSONDecodeError,
                 KeyError,

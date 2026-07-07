@@ -70,7 +70,7 @@ class MabwarpChargeModeSelect(MabwarpEntityBase, SelectEntity):
                 if mode is not None:
                     self._attr_current_option = CHARGE_MODE_MAP.get(int(mode), f"Unknown ({mode})")
                 self._reset_parse_error_count()
-                self.async_write_ha_state()
+                self._schedule_state_update()
             except (
                 json.JSONDecodeError,
                 KeyError,

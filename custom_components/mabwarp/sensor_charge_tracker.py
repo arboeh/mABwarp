@@ -74,7 +74,7 @@ class MabwarpLastChargeSensor(MabwarpEntityBase, SensorEntity):
                     self._attr_native_value = None
                     self._attr_extra_state_attributes = {}
                     _LOGGER.warning("Received empty last_charges array")
-                    self.async_write_ha_state()
+                    self._schedule_state_update()
                     return
                 last = data[-1]
                 energy = last.get("energy_charged")
@@ -88,7 +88,7 @@ class MabwarpLastChargeSensor(MabwarpEntityBase, SensorEntity):
                     ).isoformat(),
                 }
                 self._reset_parse_error_count()
-                self.async_write_ha_state()
+                self._schedule_state_update()
             except (
                 json.JSONDecodeError,
                 TypeError,

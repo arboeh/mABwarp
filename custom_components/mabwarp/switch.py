@@ -22,6 +22,7 @@ from .const import (
     TOPIC_EVSE_SET_USER_ENABLED,
     TOPIC_EVSE_USER_ENABLED,
 )
+from .entity_base import MabwarpEntityBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +36,7 @@ async def async_setup_entry(
     async_add_entities([MabwarpUserEnabledSwitch(entry)])
 
 
-class MabwarpUserEnabledSwitch(SwitchEntity):
+class MabwarpUserEnabledSwitch(MabwarpEntityBase, SwitchEntity):
     """Switch to enable or disable the WARP Charger."""
 
     _attr_has_entity_name = True
@@ -62,7 +63,7 @@ class MabwarpUserEnabledSwitch(SwitchEntity):
                     payload = payload.decode("utf-8")
                 data = json.loads(payload)
                 self._attr_is_on = data["enabled"]
-                self.async_write_ha_state()
+                self._schedule_state_update()
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
                 _LOGGER.warning("Failed to parse MQTT message on %s: %s", self._subscribe_topic, err)
 

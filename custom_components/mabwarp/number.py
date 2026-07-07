@@ -72,7 +72,7 @@ class MabwarpChargingCurrentNumber(MabwarpEntityBase, NumberEntity):
                 data = json.loads(payload)
                 self._attr_native_value = float(data["current"]) / 1000
                 self._reset_parse_error_count()
-                self.async_write_ha_state()
+                self._schedule_state_update()
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
                 self._handle_parse_error(err, self._topic)
 
@@ -131,7 +131,7 @@ class MabwarpChargeLimitsDurationNumber(MabwarpEntityBase, NumberEntity):
                 data = json.loads(payload)
                 self._attr_native_value = float(data.get("duration", 0))
                 self._reset_parse_error_count()
-                self.async_write_ha_state()
+                self._schedule_state_update()
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
                 self._handle_parse_error(err, self._topic)
 
@@ -190,7 +190,7 @@ class MabwarpChargeLimitsEnergyNumber(MabwarpEntityBase, NumberEntity):
                 data = json.loads(payload)
                 self._attr_native_value = float(data.get("energy_wh", 0))
                 self._reset_parse_error_count()
-                self.async_write_ha_state()
+                self._schedule_state_update()
             except (json.JSONDecodeError, KeyError, TypeError, ValueError) as err:
                 self._handle_parse_error(err, self._topic)
 

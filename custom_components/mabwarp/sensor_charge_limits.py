@@ -59,7 +59,7 @@ class MabwarpChargeLimitsTimestampSensor(MabwarpEntityBase, SensorEntity):
                 else:
                     self._attr_native_value = None
                 self._reset_parse_error_count()
-                self.async_write_ha_state()
+                self._schedule_state_update()
             except (
                 json.JSONDecodeError,
                 KeyError,

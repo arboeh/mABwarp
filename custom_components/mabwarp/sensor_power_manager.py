@@ -63,7 +63,7 @@ class MabwarpChargeModeSensor(MabwarpEntityBase, SensorEntity):
                     self._attr_native_value = CHARGE_MODE_MAP.get(int(mode), f"Unknown ({mode})")
                     self._attr_extra_state_attributes = {"mode": int(mode)}
                 self._reset_parse_error_count()
-                self.async_write_ha_state()
+                self._schedule_state_update()
             except (
                 json.JSONDecodeError,
                 KeyError,
@@ -119,7 +119,7 @@ class MabwarpConfigErrorFlagsSensor(MabwarpEntityBase, SensorEntity):
                         decoded[flag_name] = bool(int(flags) & (1 << idx))
                     self._attr_extra_state_attributes = decoded
                 self._reset_parse_error_count()
-                self.async_write_ha_state()
+                self._schedule_state_update()
             except (
                 json.JSONDecodeError,
                 KeyError,

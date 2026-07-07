@@ -82,7 +82,7 @@ class MabwarpDayAheadPricesForecastSensor(MabwarpEntityBase, SensorEntity):
                     "prices": prices if isinstance(prices, list) else [],
                 }
                 self._reset_parse_error_count()
-                self.async_write_ha_state()
+                self._schedule_state_update()
             except (
                 json.JSONDecodeError,
                 KeyError,
