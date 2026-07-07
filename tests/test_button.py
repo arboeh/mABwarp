@@ -1,5 +1,7 @@
 # tests/test_button.py
 
+from homeassistant.helpers.entity import EntityCategory
+
 from custom_components.mabwarp.button import MabwarpButtonBase
 from custom_components.mabwarp.const import (
     CONF_DEVICE_ID,
@@ -105,3 +107,26 @@ def test_restart_charge_limits_button_unique_id():
         "mdi:restart",
     )
     assert "charge_limits_restart" in button.unique_id
+
+
+def test_restart_charge_limits_button_entity_category_diagnostic():
+    """Test restart charge limits button has diagnostic entity_category."""
+    mock_config_entry = type(
+        "MockEntry",
+        (),
+        {
+            "data": {
+                CONF_DEVICE_ID: "TEST01",
+                CONF_WARP_VERSION: "WARP3",
+                CONF_TOPIC_PREFIX: DEFAULT_TOPIC_PREFIX,
+            }
+        },
+    )()
+    button = MabwarpButtonBase(
+        mock_config_entry,
+        "Restart Charge Limits",
+        TOPIC_CHARGE_LIMITS_RESTART.format(prefix=DEFAULT_TOPIC_PREFIX),
+        "mdi:restart",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+    assert button.entity_category == EntityCategory.DIAGNOSTIC

@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import (
     METER_VALUE_ID_CURRENT_L1,
@@ -130,6 +131,8 @@ class MabwarpMqttSensor(MabwarpEntityBase, SensorEntity):
         coordinator: MeterValueCoordinator | None = None,
         conversion_factor: float | None = None,
         translation_key: str | None = None,
+        entity_category: EntityCategory | None = None,
+        entity_registry_enabled_default: bool | None = None,
     ) -> None:
         """Initialize the sensor.
 
@@ -138,6 +141,7 @@ class MabwarpMqttSensor(MabwarpEntityBase, SensorEntity):
         ``name`` is used directly as a fallback (e.g. for dynamically discovered
         entities that cannot have a static translation key).
         """
+        super().__init__(entity_category=entity_category)
         self._config_entry = config_entry
         self._topic = topic
         self._field_path = field_path
@@ -152,6 +156,8 @@ class MabwarpMqttSensor(MabwarpEntityBase, SensorEntity):
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_state_class = state_class
+        if entity_registry_enabled_default is not None:
+            self._attr_entity_registry_enabled_default = entity_registry_enabled_default
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT topic when added to Home Assistant."""

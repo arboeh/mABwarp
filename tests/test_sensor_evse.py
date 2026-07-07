@@ -3,6 +3,8 @@
 import asyncio
 from unittest.mock import MagicMock, patch
 
+from homeassistant.helpers.entity import EntityCategory
+
 from custom_components.mabwarp.const import (
     CONF_DEVICE_ID,
     CONF_FEATURES,
@@ -72,3 +74,20 @@ def test_nfc_sensors_skipped_without_nfc_feature():
     for entity in added:
         topic = entity._topic
         assert TOPIC_NFC_LAST_TAG.format(prefix=DEFAULT_TOPIC_PREFIX) not in topic
+
+
+def test_nfc_last_tag_sensor_disabled_by_default():
+    """Test NFC Last Tag sensor is disabled by default and marked diagnostic."""
+    entry = _make_mock_entry(features=["nfc"])
+    added = []
+
+    def async_add_entities(entities):
+        added.extend(entities)
+
+    with patch("custom_components.mabwarp.sensor.async_subscribe", return_value=lambda: None):
+        asyncio.run(async_setup_entry(make_mock_hass(), entry, async_add_entities))
+
+    nfc_tag_sensors = [e for e in added if getattr(e, "_attr_translation_key", None) == "nfc_last_tag"]
+    assert len(nfc_tag_sensors) == 1
+    assert nfc_tag_sensors[0].entity_registry_enabled_default is False
+    assert nfc_tag_sensors[0].entity_category == EntityCategory.DIAGNOSTIC

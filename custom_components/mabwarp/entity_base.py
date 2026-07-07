@@ -6,6 +6,7 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import CONF_DEVICE_ID, CONF_WARP_VERSION, DOMAIN
 
@@ -16,6 +17,10 @@ class MabwarpEntityBase:
     """Mixin providing shared device_info, unique_id helper, and MQTT cleanup."""
 
     _parse_error_count: int = 0
+
+    def __init__(self, entity_category: EntityCategory | None = None) -> None:
+        if entity_category is not None:
+            self._attr_entity_category = entity_category
 
     def _build_unique_id(self, suffix: str) -> str:
         device_id = self._config_entry.data[CONF_DEVICE_ID]

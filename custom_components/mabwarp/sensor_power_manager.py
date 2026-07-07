@@ -9,6 +9,7 @@ from typing import Any
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -38,8 +39,11 @@ class MabwarpChargeModeSensor(MabwarpEntityBase, SensorEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "power_manager_charge_mode"
 
-    def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
+    def __init__(
+        self, config_entry: ConfigEntry, topic_prefix: str, entity_category: EntityCategory | None = None
+    ) -> None:
         """Initialize the sensor."""
+        super().__init__(entity_category=entity_category)
         self._config_entry = config_entry
         self._topic = TOPIC_POWER_MANAGER_CHARGE_MODE.format(prefix=topic_prefix)
         self._unsubscribe = None
@@ -92,6 +96,7 @@ class MabwarpConfigErrorFlagsSensor(MabwarpEntityBase, SensorEntity):
 
     def __init__(self, config_entry: ConfigEntry, topic_prefix: str) -> None:
         """Initialize the sensor."""
+        super().__init__(entity_category=EntityCategory.DIAGNOSTIC)
         self._config_entry = config_entry
         self._topic = TOPIC_POWER_MANAGER_STATE.format(prefix=topic_prefix)
         self._unsubscribe = None
@@ -155,6 +160,7 @@ def build_power_manager_entities(entry, topic_prefix: str, features: list) -> li
             None,
             coordinator=None,
             translation_key="power_manager_config_error_flags",
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         MabwarpMqttSensor(
             entry,

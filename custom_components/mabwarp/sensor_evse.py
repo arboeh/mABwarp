@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -245,6 +246,8 @@ def build_evse_entities(
     if has_nfc:
         entities.extend(
             [
+                # Tag-UIDs können personenbezogene Rückschlüsse ermöglichen.
+                # Der Nutzer muss die Aktivierung dieser Entitäten bewusst vornehmen (DSGVO).
                 MabwarpMqttSensor(
                     entry,
                     TOPIC_NFC_LAST_TAG.format(prefix=topic_prefix),
@@ -255,6 +258,8 @@ def build_evse_entities(
                     None,
                     coordinator,
                     translation_key="nfc_last_tag",
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    entity_registry_enabled_default=False,
                 ),
                 MabwarpMqttSensor(
                     entry,
@@ -266,6 +271,7 @@ def build_evse_entities(
                     None,
                     coordinator,
                     translation_key="nfc_last_seen",
+                    entity_registry_enabled_default=False,
                 ),
             ]
         )

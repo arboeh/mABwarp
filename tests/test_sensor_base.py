@@ -5,6 +5,7 @@ import inspect
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.helpers.entity import EntityCategory
 
 from custom_components.mabwarp.const import (
     CONF_DEVICE_ID,
@@ -477,3 +478,55 @@ def test_set_unsubscribe_callbacks_sets_both_attributes():
     coordinator.set_unsubscribe_callbacks(unsub_ids, unsub_vals)
     assert coordinator._unsubscribe_value_ids is unsub_ids
     assert coordinator._unsubscribe_values is unsub_vals
+
+
+def test_sensor_entity_category_diagnostic():
+    """Test sensor accepts and stores entity_category."""
+    mock_config_entry = type(
+        "MockEntry",
+        (),
+        {
+            "data": {
+                CONF_DEVICE_ID: "TEST01",
+                CONF_WARP_VERSION: "WARP3",
+            }
+        },
+    )()
+    sensor = MabwarpMqttSensor(
+        mock_config_entry,
+        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
+        "Test",
+        "test_field",
+        None,
+        None,
+        None,
+        None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+    assert sensor.entity_category == EntityCategory.DIAGNOSTIC
+
+
+def test_sensor_entity_registry_enabled_default_false():
+    """Test sensor accepts and stores entity_registry_enabled_default."""
+    mock_config_entry = type(
+        "MockEntry",
+        (),
+        {
+            "data": {
+                CONF_DEVICE_ID: "TEST01",
+                CONF_WARP_VERSION: "WARP3",
+            }
+        },
+    )()
+    sensor = MabwarpMqttSensor(
+        mock_config_entry,
+        TOPIC_EVSE_STATE.format(prefix=DEFAULT_TOPIC_PREFIX),
+        "Test",
+        "test_field",
+        None,
+        None,
+        None,
+        None,
+        entity_registry_enabled_default=False,
+    )
+    assert sensor.entity_registry_enabled_default is False

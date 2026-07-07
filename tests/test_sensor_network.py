@@ -4,6 +4,8 @@ import asyncio
 import json
 from unittest.mock import MagicMock, patch
 
+from homeassistant.helpers.entity import EntityCategory
+
 from custom_components.mabwarp.const import (
     CONF_DEVICE_ID,
     CONF_FEATURES,
@@ -135,3 +137,11 @@ def test_wifi_signal_strength_sensor_handles_null():
     msg.payload = b"{}"
     message_received(msg)
     assert sensor._attr_native_value is None
+
+
+def test_network_sensors_have_diagnostic_entity_category():
+    """Test all network sensors are marked as diagnostic entities."""
+    entry = _make_mock_entry(features=[])
+    sensors = build_network_entities(entry, DEFAULT_TOPIC_PREFIX, [])
+    for sensor in sensors:
+        assert sensor.entity_category == EntityCategory.DIAGNOSTIC

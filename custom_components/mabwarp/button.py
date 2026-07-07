@@ -8,6 +8,7 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.components.mqtt.client import async_publish
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -53,6 +54,7 @@ async def async_setup_entry(
                 "restart_charge_limits",
                 TOPIC_CHARGE_LIMITS_RESTART.format(prefix=topic_prefix),
                 "mdi:restart",
+                entity_category=EntityCategory.DIAGNOSTIC,
             )
         )
 
@@ -62,8 +64,16 @@ async def async_setup_entry(
 class MabwarpButtonBase(MabwarpEntityBase, ButtonEntity):
     """Base class for mABwarp MQTT buttons."""
 
-    def __init__(self, config_entry: ConfigEntry, translation_key: str, topic: str, icon: str) -> None:
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        translation_key: str,
+        topic: str,
+        icon: str,
+        entity_category: EntityCategory | None = None,
+    ) -> None:
         """Initialize the button."""
+        super().__init__(entity_category=entity_category)
         self._config_entry = config_entry
         self._topic = topic
         self._attr_has_entity_name = True

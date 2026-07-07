@@ -10,6 +10,7 @@ from homeassistant.components.mqtt.client import async_subscribe
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -30,7 +31,7 @@ async def async_setup_entry(
     """Set up mABwarp binary sensors."""
     features = entry.data.get("features", [])
     if has_feature(features, Feature.POWER_MANAGER):
-        async_add_entities([MabwarpIs3phaseBinarySensor(entry)])
+        async_add_entities([MabwarpIs3phaseBinarySensor(entry, entity_category=EntityCategory.DIAGNOSTIC)])
 
 
 class MabwarpIs3phaseBinarySensor(MabwarpEntityBase, BinarySensorEntity):
@@ -42,6 +43,7 @@ class MabwarpIs3phaseBinarySensor(MabwarpEntityBase, BinarySensorEntity):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the binary sensor."""
+        super().__init__(entity_category=EntityCategory.DIAGNOSTIC)
         self._config_entry = config_entry
         self._unsubscribe = None
         self._attr_is_on = False

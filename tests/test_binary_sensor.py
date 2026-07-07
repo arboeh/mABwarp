@@ -4,6 +4,8 @@ import asyncio
 import logging
 from unittest.mock import MagicMock, patch
 
+from homeassistant.helpers.entity import EntityCategory
+
 from custom_components.mabwarp.binary_sensor import MabwarpIs3phaseBinarySensor
 from custom_components.mabwarp.const import (
     CONF_DEVICE_ID,
@@ -135,3 +137,20 @@ def test_is_3phase_binary_sensor_unavailable_after_three_parse_errors(caplog):
 
     assert sensor._attr_available is False
     assert "Failed to parse MQTT message" in caplog.text
+
+
+def test_is_3phase_binary_sensor_entity_category_diagnostic():
+    """Test is_3phase binary sensor has diagnostic entity_category."""
+    mock_config_entry = type(
+        "MockEntry",
+        (),
+        {
+            "data": {
+                CONF_DEVICE_ID: "TEST01",
+                CONF_WARP_VERSION: "WARP3",
+                CONF_TOPIC_PREFIX: DEFAULT_TOPIC_PREFIX,
+            }
+        },
+    )()
+    sensor = MabwarpIs3phaseBinarySensor(mock_config_entry)
+    assert sensor.entity_category == EntityCategory.DIAGNOSTIC

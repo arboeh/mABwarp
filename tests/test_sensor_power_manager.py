@@ -5,6 +5,8 @@ import json
 import logging
 from unittest.mock import MagicMock, patch
 
+from homeassistant.helpers.entity import EntityCategory
+
 from custom_components.mabwarp.const import (
     CONF_DEVICE_ID,
     CONF_FEATURES,
@@ -251,3 +253,10 @@ def test_config_error_flags_sensor_unavailable_after_three_parse_errors(caplog):
 
     assert sensor._attr_available is False
     assert "Failed to parse MQTT message" in caplog.text
+
+
+def test_config_error_flags_sensor_entity_category_diagnostic():
+    """Test config error flags sensor has diagnostic entity_category."""
+    entry = _make_mock_entry(features=["power_manager"])
+    sensor = MabwarpConfigErrorFlagsSensor(entry, DEFAULT_TOPIC_PREFIX)
+    assert sensor.entity_category == EntityCategory.DIAGNOSTIC

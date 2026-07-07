@@ -44,6 +44,4 @@ def test_meter_translation_keys_match_meter_value_ids():
     for lang in ("en", "de"):
         sensor_keys = _load_entity_sensor(lang)
         for key in METER_TRANSLATION_KEYS:
-            assert key in sensor_keys, (
-                f"{lang}.json is missing meter translation key '{key}'"
-            )
+            assert key in sensor_keys, f"{lang}.json is missing meter translation key '{key}'"

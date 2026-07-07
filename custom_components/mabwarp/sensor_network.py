@@ -9,6 +9,7 @@ from typing import Any
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import (
     CONF_DEVICE_ID,
@@ -37,6 +38,7 @@ class MabwarpWifiSignalStrengthSensor(MabwarpMqttSensor):
             SensorStateClass.MEASUREMENT,
             coordinator=None,
             translation_key="wifi_signal_strength",
+            entity_category=EntityCategory.DIAGNOSTIC,
         )
 
 
@@ -55,6 +57,7 @@ class MabwarpWifiIpAddressSensor(MabwarpMqttSensor):
             None,
             coordinator=None,
             translation_key="wifi_ip_address",
+            entity_category=EntityCategory.DIAGNOSTIC,
         )
 
 
@@ -73,6 +76,7 @@ class MabwarpWifiConnectionStateSensor(MabwarpMqttSensor):
             None,
             coordinator=None,
             translation_key="wifi_connection_state",
+            entity_category=EntityCategory.DIAGNOSTIC,
         )
 
 
@@ -91,6 +95,7 @@ class MabwarpEthernetLinkSpeedSensor(MabwarpMqttSensor):
             SensorStateClass.MEASUREMENT,
             coordinator=None,
             translation_key="ethernet_link_speed",
+            entity_category=EntityCategory.DIAGNOSTIC,
         )
 
 
@@ -109,6 +114,7 @@ class MabwarpEthernetIpAddressSensor(MabwarpMqttSensor):
             None,
             coordinator=None,
             translation_key="ethernet_ip_address",
+            entity_category=EntityCategory.DIAGNOSTIC,
         )
 
 
