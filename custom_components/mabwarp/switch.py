@@ -11,14 +11,10 @@ from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_DEVICE_ID,
     CONF_TOPIC_PREFIX,
-    CONF_WARP_VERSION,
-    DOMAIN,
     TOPIC_EVSE_SET_USER_ENABLED,
     TOPIC_EVSE_USER_ENABLED,
 )
@@ -98,17 +94,4 @@ class MabwarpUserEnabledSwitch(MabwarpEntityBase, SwitchEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for this switch."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        return f"{DOMAIN}_{device_id}_user_enabled"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        device_id = self._config_entry.data[CONF_DEVICE_ID]
-        warp_version = self._config_entry.data[CONF_WARP_VERSION]
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=f"WARP Charger {device_id}",
-            manufacturer="Tinkerforge GmbH",
-            model=warp_version,
-        )
+        return self._build_unique_id("user_enabled")

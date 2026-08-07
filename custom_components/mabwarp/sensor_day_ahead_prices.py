@@ -19,6 +19,7 @@ from .const import (
     TOPIC_DAY_AHEAD_PRICES_STATE,
 )
 from .entity_base import MabwarpEntityBase
+from .features import Feature, has_feature
 from .sensor_base import MabwarpMqttSensor, async_subscribe
 
 _LOGGER = logging.getLogger(__name__)
@@ -107,7 +108,7 @@ class MabwarpDayAheadPricesForecastSensor(MabwarpEntityBase, SensorEntity):
 
 def build_day_ahead_prices_entities(entry, topic_prefix: str, features: list) -> list:
     """Build day ahead prices sensor entities."""
-    has_day_ahead_prices = "day_ahead_prices" in features
+    has_day_ahead_prices = has_feature(features, Feature.DAY_AHEAD_PRICES)
     if not has_day_ahead_prices:
         return []
 

@@ -24,7 +24,7 @@ from .const import (
     TOPIC_METER_VALUES,
     TOPIC_NFC_LAST_TAG,
 )
-from .features import Feature, has_feature, has_meters
+from .features import Feature, has_feature, has_feature_or_default, has_meters
 from .sensor_base import MabwarpMqttSensor, MeterValueCoordinator, async_subscribe
 
 
@@ -37,7 +37,7 @@ def build_evse_entities(
     """Build EVSE-related sensor entities."""
     entities = []
     has_meters_value = has_meters(features)
-    has_nfc = has_feature(features, Feature.NFC) or not features
+    has_nfc = has_feature_or_default(features, Feature.NFC)
 
     entities.extend(
         [

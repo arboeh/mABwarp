@@ -21,6 +21,7 @@ from .const import (
     TOPIC_POWER_MANAGER_STATE,
 )
 from .entity_base import MabwarpEntityBase
+from .features import Feature, has_feature
 from .sensor_base import MabwarpMqttSensor, async_subscribe
 
 _LOGGER = logging.getLogger(__name__)
@@ -144,7 +145,7 @@ class MabwarpConfigErrorFlagsSensor(MabwarpEntityBase, SensorEntity):
 
 def build_power_manager_entities(entry, topic_prefix: str, features: list) -> list:
     """Build power manager sensor entities."""
-    has_power_manager = "power_manager" in features
+    has_power_manager = has_feature(features, Feature.POWER_MANAGER)
     if not has_power_manager:
         return []
 

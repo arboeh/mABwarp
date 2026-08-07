@@ -17,6 +17,7 @@ from .const import (
     TOPIC_CHARGE_LIMITS_STATE,
 )
 from .entity_base import MabwarpEntityBase
+from .features import Feature, has_feature
 from .sensor_base import MabwarpMqttSensor, async_subscribe
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,7 +116,7 @@ class MabwarpChargeLimitsEnergySensor(MabwarpMqttSensor):
 
 def build_charge_limits_entities(entry, topic_prefix: str, features: list) -> list:
     """Build charge limits sensor entities."""
-    has_charge_limits = "charge_limits" in features
+    has_charge_limits = has_feature(features, Feature.CHARGE_LIMITS)
     if not has_charge_limits:
         return []
 

@@ -41,9 +41,9 @@ def test_no_duplicate_unique_ids():
     asyncio.run(run_test())
 
     unique_ids = [e.unique_id for e in added]
-    assert len(unique_ids) == len(
-        set(unique_ids)
-    ), f"Duplicate unique_ids found: {[uid for uid in unique_ids if unique_ids.count(uid) > 1]}"
+    assert len(unique_ids) == len(set(unique_ids)), (
+        f"Duplicate unique_ids found: {[uid for uid in unique_ids if unique_ids.count(uid) > 1]}"
+    )
 
 
 def test_alloc_slots_have_unique_names():

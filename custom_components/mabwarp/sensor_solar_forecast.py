@@ -22,6 +22,7 @@ from .const import (
     TOPIC_SOLAR_FORECAST_STATE,
 )
 from .entity_base import MabwarpEntityBase
+from .features import Feature, has_feature
 from .sensor_base import MabwarpMqttSensor, async_subscribe
 
 _LOGGER = logging.getLogger(__name__)
@@ -133,7 +134,7 @@ def _discover_solar_planes(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Discover solar plane entities dynamically."""
-    future = asyncio.get_event_loop().create_future()
+    future = asyncio.get_running_loop().create_future()
 
     def _planes_list_received(msg: ReceiveMessage) -> None:
         if future.done():
@@ -172,7 +173,7 @@ def _discover_solar_planes(
 
         if not plane_indices:
             for idx in range(10):
-                fut = asyncio.get_event_loop().create_future()
+                fut = asyncio.get_running_loop().create_future()
 
                 def _make_callback(f, i):
                     def _plane_received(msg: ReceiveMessage) -> None:
@@ -236,7 +237,7 @@ def build_solar_forecast_entities(
     async_add_entities: AddEntitiesCallback,
 ) -> list:
     """Build solar forecast sensor entities."""
-    has_solar_forecast = "solar_forecast" in features
+    has_solar_forecast = has_feature(features, Feature.SOLAR_FORECAST)
     if not has_solar_forecast:
         return []
 

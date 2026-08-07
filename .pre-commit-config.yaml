@@ -1,3 +1,5 @@
+# .pre-commit-config.yaml
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
@@ -8,9 +10,20 @@ repos:
       - id: check-added-large-files
       - id: check-json
       - id: check-merge-conflict
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+    rev: v0.16.1
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: hassfest-translations
+        name: hassfest translations validation
+        entry: python -m pytest tests/test_translations.py -q
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]

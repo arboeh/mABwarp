@@ -13,7 +13,7 @@ DEFAULT_TOPIC_PREFIX = "warp"
 
 WARP_VERSIONS = ["WARP2", "WARP3", "WARP4"]
 
-# Topic templates – format with prefix
+# Topic templates - format with prefix
 TOPIC_EVSE_STATE = "{prefix}/evse/state"
 TOPIC_EVSE_LOW_LEVEL = "{prefix}/evse/low_level_state"
 TOPIC_METER_VALUES = "{prefix}/meters/1/values"

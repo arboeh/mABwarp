@@ -37,7 +37,7 @@ async def _detect_features(hass, topic_prefix: str, timeout: int = 5) -> list[st
     """Detect features from the charger via MQTT."""
     features: list[str] = []
     topic = TOPIC_INFO_FEATURES.format(prefix=topic_prefix)
-    future: asyncio.Future[list[str]] = asyncio.get_event_loop().create_future()
+    future: asyncio.Future[list[str]] = asyncio.get_running_loop().create_future()
 
     def _features_message_received(msg: ReceiveMessage) -> None:
         if future.done():

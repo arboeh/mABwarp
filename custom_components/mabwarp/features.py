@@ -26,9 +26,18 @@ def has_feature(features: list[str], feature: Feature) -> bool:
     return feature.value in features
 
 
+def has_feature_or_default(features: list[str], feature: Feature) -> bool:
+    """Return True if feature is present or features list is empty (default enabled)."""
+    return feature.value in features or not features
+
+
 def has_meters(features: list[str]) -> bool:
-    has_meters = "meters" in features or not features
-    if "meter" in features and "meters" not in features:
-        has_meters = False
+    """Return True if modern meter API is available, False if deprecated single-meter API."""
+    if not features:
+        return True
+    if Feature.METERS.value in features:
+        return True
+    if Feature.METER.value in features and Feature.METERS.value not in features:
         _LOGGER.warning("Charger uses deprecated meter API, modern meters sensors skipped")
-    return has_meters
+        return False
+    return False

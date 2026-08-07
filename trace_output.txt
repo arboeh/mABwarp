@@ -1,0 +1,189 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.9, pytest-8.3.3, pluggy-1.6.0 -- I:\Development\mABwarp\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: I:\Development\mABwarp
+configfile: pyproject.toml
+plugins: anyio-4.14.1, aiohttp-1.0.5, asyncio-0.24.0, cov-6.0.0, pytest_freezer-0.4.8, github-actions-annotate-failures-0.2.0, homeassistant-custom-component-0.13.195, picked-0.5.0, socket-0.7.0, sugar-1.0.0, timeout-2.3.1, unordered-0.6.1, xdist-3.6.1, requests-mock-1.12.1, respx-0.21.1, syrupy-4.7.2
+asyncio: mode=Mode.AUTO, default_loop_scope=function
+timeout: 30.0s
+timeout method: thread
+timeout func_only: False
+collecting ... collected 1 item
+
+tests/test_translations.py::test_meter_translation_keys_match_meter_value_ids ERROR [100%]
+
+=================================== ERRORS ====================================
+_____ ERROR at setup of test_meter_translation_keys_match_meter_value_ids _____
+
+fixturedef = <FixtureDef argname='event_loop' scope='function' baseid=''>
+
+    @pytest.hookimpl(hookwrapper=True)
+    def pytest_fixture_setup(
+        fixturedef: FixtureDef,
+    ) -> Generator[None, pluggy.Result, None]:
+        """Adjust the event loop policy when an event loop is produced."""
+        if fixturedef.argname == "event_loop":
+            # The use of a fixture finalizer is preferred over the
+            # pytest_fixture_post_finalizer hook. The fixture finalizer is invoked once
+            # for each fixture, whereas the hook may be invoked multiple times for
+            # any specific fixture.
+            # see https://github.com/pytest-dev/pytest/issues/5848
+            _add_finalizers(
+                fixturedef,
+                _close_event_loop,
+                _restore_event_loop_policy(asyncio.get_event_loop_policy()),
+                _provide_clean_event_loop,
+            )
+            outcome = yield
+>           loop: asyncio.AbstractEventLoop = outcome.get_result()
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:777: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+request = <SubRequest 'event_loop' for <Function test_meter_translation_keys_match_meter_value_ids>>
+
+    @pytest.fixture
+    def event_loop(request: FixtureRequest) -> Iterator[asyncio.AbstractEventLoop]:
+        """Create an instance of the default event loop for each test case."""
+        new_loop_policy = request.getfixturevalue(event_loop_policy.__name__)
+        asyncio.set_event_loop_policy(new_loop_policy)
+>       loop = asyncio.get_event_loop_policy().new_event_loop()
+
+.venv\Lib\site-packages\pytest_asyncio\plugin.py:1029: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <homeassistant.runner.HassEventLoopPolicy object at 0x000002C541925910>
+
+    def new_event_loop(self) -> asyncio.AbstractEventLoop:
+        """Get the event loop."""
+>       loop: asyncio.AbstractEventLoop = super().new_event_loop()
+
+.venv\Lib\site-packages\homeassistant\runner.py:74: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <homeassistant.runner.HassEventLoopPolicy object at 0x000002C541925910>
+
+    def new_event_loop(self):
+        """Create a new event loop.
+    
+        You must call set_event_loop() to make this the current event
+        loop.
+        """
+>       return self._loop_factory()
+
+C:\Users\arend\AppData\Roaming\uv\python\cpython-3.12.9-windows-x86_64-none\Lib\asyncio\events.py:720: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ProactorEventLoop running=False closed=False debug=False>
+proactor = <IocpProactor overlapped#=0 result#=0>
+
+    def __init__(self, proactor=None):
+        if proactor is None:
+            proactor = IocpProactor()
+>       super().__init__(proactor)
+
+C:\Users\arend\AppData\Roaming\uv\python\cpython-3.12.9-windows-x86_64-none\Lib\asyncio\windows_events.py:316: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ProactorEventLoop running=False closed=False debug=False>
+proactor = <IocpProactor overlapped#=0 result#=0>
+
+    def __init__(self, proactor):
+        super().__init__()
+        logger.debug('Using proactor: %s', proactor.__class__.__name__)
+        self._proactor = proactor
+        self._selector = proactor   # convenient alias
+        self._self_reading_future = None
+        self._accept_futures = {}   # socket file descriptor => Future
+        proactor.set_loop(self)
+>       self._make_self_pipe()
+
+C:\Users\arend\AppData\Roaming\uv\python\cpython-3.12.9-windows-x86_64-none\Lib\asyncio\proactor_events.py:640: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ProactorEventLoop running=False closed=False debug=False>
+
+    def _make_self_pipe(self):
+        # A self-socket, really. :-)
+>       self._ssock, self._csock = socket.socketpair()
+
+C:\Users\arend\AppData\Roaming\uv\python\cpython-3.12.9-windows-x86_64-none\Lib\asyncio\proactor_events.py:787: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+family = <AddressFamily.AF_INET: 2>, type = <SocketKind.SOCK_STREAM: 1>
+proto = 0
+
+    def _fallback_socketpair(family=AF_INET, type=SOCK_STREAM, proto=0):
+        if family == AF_INET:
+            host = _LOCALHOST
+        elif family == AF_INET6:
+            host = _LOCALHOST_V6
+        else:
+            raise ValueError("Only AF_INET and AF_INET6 socket address families "
+                             "are supported")
+        if type != SOCK_STREAM:
+            raise ValueError("Only SOCK_STREAM socket type is supported")
+        if proto != 0:
+            raise ValueError("Only protocol zero is supported")
+    
+        # We create a connected TCP socket. Note the trick with
+        # setblocking(False) that prevents us from having to create a thread.
+>       lsock = socket(family, type, proto)
+
+C:\Users\arend\AppData\Roaming\uv\python\cpython-3.12.9-windows-x86_64-none\Lib\socket.py:613: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cls = <class 'pytest_socket.disable_socket.<locals>.GuardedSocket'>
+family = <AddressFamily.AF_INET: 2>, type = <SocketKind.SOCK_STREAM: 1>
+proto = 0, fileno = None
+
+    def __new__(cls, family=-1, type=-1, proto=-1, fileno=None):
+        if _is_unix_socket(family) and allow_unix_socket:
+            return super().__new__(cls, family, type, proto, fileno)
+    
+>       raise SocketBlockedError()
+E       pytest_socket.SocketBlockedError: A test tried to use socket.socket.
+
+.venv\Lib\site-packages\pytest_socket.py:89: SocketBlockedError
+---------------------------- Captured stdout setup ----------------------------
+=== disable_socket called ===
+---------------------------- Captured stderr setup ----------------------------
+  File "I:\Development\mABwarp\.venv\Lib\site-packages\_pytest\runner.py", line 241, in call_and_report
+    call = CallInfo.from_call(
+  File "I:\Development\mABwarp\.venv\Lib\site-packages\_pytest\runner.py", line 341, in from_call
+    result: TResult | None = func()
+  File "I:\Development\mABwarp\.venv\Lib\site-packages\_pytest\runner.py", line 242, in <lambda>
+    lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+  File "I:\Development\mABwarp\.venv\Lib\site-packages\pluggy\_hooks.py", line 512, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+  File "I:\Development\mABwarp\.venv\Lib\site-packages\pluggy\_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+  File "I:\Development\mABwarp\.venv\Lib\site-packages\pluggy\_callers.py", line 121, in _multicall
+    res = hook_impl.function(*args)
+  File "I:\Development\mABwarp\.venv\Lib\site-packages\pytest_homeassistant_custom_component\plugins.py", line 177, in pytest_runtest_setup
+    pytest_socket.disable_socket(allow_unix_socket=True)
+  File "I:\Development\mABwarp\tests\conftest.py", line 28, in traced
+    traceback.print_stack(limit=8)
+============================== warnings summary ===============================
+tests/test_translations.py::test_meter_translation_keys_match_meter_value_ids
+  I:\Development\mABwarp\.venv\Lib\site-packages\_pytest\fixtures.py:1091: PluggyTeardownRaisedWarning: A plugin raised an exception during an old-style hookwrapper teardown.
+  Plugin: asyncio, Hook: pytest_fixture_setup
+  SocketBlockedError: A test tried to use socket.socket.
+  For more information see https://pluggy.readthedocs.io/en/stable/api_reference.html#pluggy.PluggyTeardownRaisedWarning
+    result = ihook.pytest_fixture_setup(fixturedef=self, request=request)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR tests/test_translations.py::test_meter_translation_keys_match_meter_value_ids - pytest_socket.SocketBlockedError: A test tried to use socket.socket.
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!
+========================= 1 warning, 1 error in 0.79s =========================
+Exception ignored in: <function BaseEventLoop.__del__ at 0x000002C53AF1AA20>
+Traceback (most recent call last):
+  File "C:\Users\arend\AppData\Roaming\uv\python\cpython-3.12.9-windows-x86_64-none\Lib\asyncio\base_events.py", line 732, in __del__
+    self.close()
+  File "C:\Users\arend\AppData\Roaming\uv\python\cpython-3.12.9-windows-x86_64-none\Lib\asyncio\proactor_events.py", line 697, in close
+    self._close_self_pipe()
+  File "C:\Users\arend\AppData\Roaming\uv\python\cpython-3.12.9-windows-x86_64-none\Lib\asyncio\proactor_events.py", line 779, in _close_self_pipe
+    self._ssock.close()
+    ^^^^^^^^^^^
+AttributeError: 'ProactorEventLoop' object has no attribute '_ssock'

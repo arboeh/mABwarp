@@ -26,6 +26,7 @@ from .const import (
     TOPIC_TEMPERATURES_STATE,
 )
 from .entity_base import MabwarpEntityBase
+from .features import Feature, has_feature
 from .sensor_base import MabwarpMqttSensor, async_subscribe
 
 _LOGGER = logging.getLogger(__name__)
@@ -187,7 +188,7 @@ def _discover_temperature_keys(
 ) -> None:
     """Discover additional temperature keys dynamically."""
     temp_topic = TOPIC_TEMPERATURES_STATE.format(prefix=topic_prefix)
-    future = asyncio.get_event_loop().create_future()
+    future = asyncio.get_running_loop().create_future()
     discovered_keys = set()
 
     def _temp_message_received(msg: ReceiveMessage) -> None:
@@ -347,14 +348,14 @@ def build_misc_entities(
         ]
     )
 
-    has_temperatures = "temperatures" in features
+    has_temperatures = has_feature(features, Feature.TEMPERATURES)
     if has_temperatures:
         entities.append(
             MabwarpTemperatureSensor(entry, topic_prefix, "Temperature Current", "current", "temperature_current")
         )
         _discover_temperature_keys(hass, entry, topic_prefix, async_add_entities)
 
-    has_p14a_enwg = "p14a_enwg" in features
+    has_p14a_enwg = has_feature(features, Feature.P14A_ENWG)
     if has_p14a_enwg:
         entities.extend(
             [

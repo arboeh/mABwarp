@@ -19,6 +19,7 @@ from .const import (
     TOPIC_CHARGE_TRACKER_STATE,
 )
 from .entity_base import MabwarpEntityBase
+from .features import Feature, has_feature_or_default
 from .sensor_base import MabwarpMqttSensor, async_subscribe
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,7 +114,7 @@ class MabwarpLastChargeSensor(MabwarpEntityBase, SensorEntity):
 
 def build_charge_tracker_entities(entry, topic_prefix: str, features: list) -> list:
     """Build charge tracker sensor entities."""
-    has_charge_tracker = "charge_tracker" in features or not features
+    has_charge_tracker = has_feature_or_default(features, Feature.CHARGE_TRACKER)
     if not has_charge_tracker:
         return []
 

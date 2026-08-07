@@ -8,16 +8,14 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityCategory
 
 from .const import (
-    CONF_DEVICE_ID,
-    CONF_WARP_VERSION,
-    DOMAIN,
+    CONF_TOPIC_PREFIX,
     TOPIC_ETHERNET_STATE,
     TOPIC_WIFI_STATE,
 )
+from .features import Feature, has_feature_or_default
 from .sensor_base import MabwarpMqttSensor, async_subscribe
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,7 +124,7 @@ def build_network_entities(entry, topic_prefix: str, features: list) -> list:
         MabwarpWifiConnectionStateSensor(entry, topic_prefix),
     ]
 
-    has_ethernet = "ethernet" in features or not features
+    has_ethernet = has_feature_or_default(features, Feature.ETHERNET)
     if has_ethernet:
         entities.extend(
             [

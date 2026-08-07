@@ -3,19 +3,24 @@
     "pyproject.toml": "https://json.schemastore.org/pyproject.json"
   },
   "files.exclude": {
-    "__pycache__": true,
-    ".history": true,
-    ".mypy_cache": true,
-    ".pytest_cache": true,
-    ".ruff_cache": true,
-    ".venv": true,
-    "mabwarp.egg-info": true,
-    ".coverage": true,
-    "pytestdebug.log": true,
-    "uv.lock": true,
-    "custom_components/mabwarp/__pycache__": true,
-    ".vscode": true,
-    "tests/__pycache__": true,
-    ".venv2": true
+    "__pycache__": false,
+    ".history": false,
+    ".mypy_cache": false,
+    ".pytest_cache": false,
+    ".ruff_cache": false,
+    ".venv": false,
+    "mabwarp.egg-info": false,
+    ".coverage": false,
+    "pytestdebug.log": false,
+    "uv.lock": false,
+    "custom_components/mabwarp/__pycache__": false,
+    ".vscode": false,
+    "tests/__pycache__": false,
+    ".venv2": false,
+    "**/.git": false,
+    "**/.svn": false,
+    "**/.hg": false,
+    "**/.DS_Store": false,
+    "**/Thumbs.db": false
   }
 }
